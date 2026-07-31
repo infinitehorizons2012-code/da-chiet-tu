@@ -125,6 +125,37 @@ const mockDatabase = {
         strokes: [4, 5, 6, 7, 8]
       }
     ]
+  },
+  '茶': {
+    char: '茶',
+    pinyin: 'chá',
+    meaning: 'Trà (Tea)',
+    components: [
+      {
+        type: 'Radical (Bộ thủ)',
+        char: '艹',
+        pinyin: 'cǎo',
+        meaning: 'Thảo (Cỏ, thực vật). Trà là một loại cây trồng.',
+        color: '#2563eb', // Blue
+        strokes: [0, 1, 2]
+      },
+      {
+        type: 'Component (Thành phần)',
+        char: '人',
+        pinyin: 'rén',
+        meaning: 'Nhân (Người). Con người hòa mình giữa cỏ cây.',
+        color: '#e11d48', // Red
+        strokes: [3, 4]
+      },
+      {
+        type: 'Component (Thành phần)',
+        char: '木',
+        pinyin: 'mù',
+        meaning: 'Mộc (Cây gỗ). Gốc rễ của cây trà.',
+        color: '#059669', // Green
+        strokes: [5, 6, 7, 8]
+      }
+    ]
   }
 }
 
@@ -202,7 +233,7 @@ function App() {
       setResult(mockDatabase[char])
       setError('')
     } else {
-      setError(`Chưa có dữ liệu cho chữ "${char}". Thử các chữ: 妈, 明, 语, 吃, 南.`)
+      setError(`Chưa có dữ liệu cho chữ "${char}". Thử các chữ: 妈, 明, 语, 吃, 南, 茶.`)
     }
   }
 
