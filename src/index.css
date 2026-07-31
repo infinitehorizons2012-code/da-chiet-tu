@@ -25,7 +25,7 @@ body {
 #root {
   width: 100%;
   max-width: 1000px;
-  padding: 2rem;
+  padding: 1rem 2rem; /* Reduced top/bottom padding to fit screen */
   box-sizing: border-box;
 }
 
@@ -34,8 +34,8 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.5rem 0 1.5rem 0;
-  margin-bottom: 2rem;
+  padding: 0.5rem 0 0.5rem 0; /* Reduced bottom padding */
+  margin-bottom: 1rem; /* Reduced margin */
   border-bottom: 2px solid var(--border-light);
 }
 
@@ -152,7 +152,7 @@ body {
 .search-container {
   display: flex;
   gap: 0.75rem;
-  margin-bottom: 2rem;
+  margin-bottom: 1rem; /* Reduced margin */
   background: white;
   border: 1px solid var(--border-light);
   border-radius: 12px;
@@ -196,10 +196,10 @@ body {
 /* Infographic Layout */
 .infographic-panel {
   display: flex;
-  gap: 2rem;
+  gap: 1.5rem; /* Reduced gap */
   border: 1px solid var(--border-light);
   border-radius: 16px;
-  padding: 2rem;
+  padding: 1.5rem; /* Reduced padding */
   background-color: var(--panel-bg);
   position: relative;
   align-items: stretch;
@@ -211,7 +211,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2rem;
+  gap: 1.5rem; /* Reduced gap */
 }
 
 .divider-line {
@@ -296,7 +296,7 @@ body {
 .components-list {
   display: flex;
   flex-direction: column;
-  gap: 3rem; /* Space between rows for arrows */
+  gap: 1.5rem; /* Reduced gap from 3rem to 1.5rem */
 }
 
 .breakdown-row {
@@ -335,8 +335,8 @@ body {
 }
 
 .comp-image-placeholder {
-  width: 80px;
-  height: 80px;
+  width: 60px; /* Reduced from 80px */
+  height: 60px; /* Reduced from 80px */
   margin: 0 2rem;
   display: flex;
   align-items: center;
@@ -390,7 +390,7 @@ body {
   left: 50%;
   transform: translateX(-50%);
   width: 2px;
-  height: 3rem; /* Matches the gap in components-list */
+  height: 1.5rem; /* Matches the new gap in components-list */
   background-color: var(--line-color);
   z-index: 1;
 }
@@ -407,7 +407,7 @@ body {
 }
 
 .mnemonic-box {
-  margin-top: 3rem; /* matches the gap in components-list */
+  margin-top: 1.5rem; /* matches the gap in components-list */
   border: 1px solid var(--line-color);
   border-radius: 12px;
   padding: 1rem 1.5rem;
