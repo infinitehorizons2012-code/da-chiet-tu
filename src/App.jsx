@@ -86,6 +86,34 @@ const mockDatabase = {
         color: '#e11d48'
       }
     ]
+  },
+  '南': {
+    char: '南',
+    pinyin: 'nán',
+    meaning: 'Hướng Nam (South)',
+    components: [
+      {
+        type: 'Radical (Bộ thủ)',
+        char: '十',
+        pinyin: 'shí',
+        meaning: 'Thập (Số 10). Đóng vai trò bộ thủ chính của chữ.',
+        color: '#2563eb'
+      },
+      {
+        type: 'Component (Thành phần)',
+        char: '冂',
+        pinyin: 'jiōng',
+        meaning: 'Khuynh (Vùng không gian, bao quanh).',
+        color: '#e11d48'
+      },
+      {
+        type: 'Component (Thành phần)',
+        char: '𢆉',
+        pinyin: 'yáng',
+        meaning: 'Dạng cổ giống chữ 羊 (Dương - con cừu).',
+        color: '#e11d48'
+      }
+    ]
   }
 }
 
@@ -126,7 +154,7 @@ function App() {
       setResult(mockDatabase[char])
       setError('')
     } else {
-      setError(`Chưa có dữ liệu cho chữ "${char}". Thử các chữ: 妈, 明, 语, 吃.`)
+      setError(`Chưa có dữ liệu cho chữ "${char}". Thử các chữ: 妈, 明, 语, 吃, 南.`)
     }
   }
 
