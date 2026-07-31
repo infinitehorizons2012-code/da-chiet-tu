@@ -147,26 +147,38 @@ function HanziDisplay({ char, components }) {
       showOutline: false
     });
 
-    // Lắng nghe sự thay đổi của DOM để tô màu thủ công từng nét khi SVG được sinh ra
-    const observer = new MutationObserver((mutations, obs) => {
-      const paths = containerRef.current.querySelectorAll('svg > g > path');
-      if (paths.length > 0 && components) {
-        components.forEach(comp => {
-          if (comp.strokes) {
-            comp.strokes.forEach(idx => {
-              if (paths[idx]) {
-                paths[idx].setAttribute('fill', comp.color);
-              }
-            });
-          }
-        });
-        obs.disconnect(); // Dừng quan sát sau khi tô màu xong
+    // HanziWriter tải dữ liệu bất đồng bộ. Dùng setInterval để đợi SVG render xong.
+    let retries = 0;
+    const interval = setInterval(() => {
+      retries++;
+      if (retries > 100) {
+        clearInterval(interval);
+        return;
       }
-    });
+      
+      // Nhóm g cuối cùng trong SVG chứa các nét vẽ (foreground strokes)
+      const strokePaths = containerRef.current.querySelectorAll('svg > g:last-child > path');
+      
+      // Nếu số nét vẽ > 0 nghĩa là HanziWriter đã render xong
+      if (strokePaths.length > 0) {
+        clearInterval(interval);
+        
+        if (components) {
+          components.forEach(comp => {
+            if (comp.strokes) {
+              comp.strokes.forEach(idx => {
+                if (strokePaths[idx]) {
+                  // Phải dùng style.fill vì HanziWriter gắn màu bằng inline style
+                  strokePaths[idx].style.fill = comp.color;
+                }
+              });
+            }
+          });
+        }
+      }
+    }, 50);
 
-    observer.observe(containerRef.current, { childList: true, subtree: true });
-
-    return () => observer.disconnect();
+    return () => clearInterval(interval);
   }, [char, components]);
 
   return <div ref={containerRef} className="char-writer" />;
