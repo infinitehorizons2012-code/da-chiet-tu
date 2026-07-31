@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import HanziWriter from 'hanzi-writer'
 import './index.css'
 
 const mockDatabase = {
@@ -11,13 +12,15 @@ const mockDatabase = {
         type: 'Radical (Bộ thủ chỉ nghĩa)',
         char: '女',
         pinyin: 'nǚ',
-        meaning: 'Nữ (Phụ nữ). Cho biết chữ này liên quan đến phái nữ.'
+        meaning: 'Nữ (Phụ nữ). Cho biết chữ này liên quan đến phái nữ.',
+        color: '#2563eb' // Blue
       },
       {
         type: 'Phonetic (Thành phần biểu âm)',
         char: '马',
         pinyin: 'mǎ',
-        meaning: 'Mã (Con ngựa). Gợi ý cách phát âm là "ma".'
+        meaning: 'Mã (Con ngựa). Gợi ý cách phát âm là "ma".',
+        color: '#e11d48' // Red
       }
     ]
   },
@@ -30,13 +33,15 @@ const mockDatabase = {
         type: 'Radical (Bộ thủ)',
         char: '日',
         pinyin: 'rì',
-        meaning: 'Nhật (Mặt trời).'
+        meaning: 'Nhật (Mặt trời).',
+        color: '#2563eb'
       },
       {
         type: 'Component (Thành phần)',
         char: '月',
         pinyin: 'yuè',
-        meaning: 'Nguyệt (Mặt trăng). Mặt trời và mặt trăng ở cạnh nhau tạo nên sự sáng sủa.'
+        meaning: 'Nguyệt (Mặt trăng). Mặt trời và mặt trăng ở cạnh nhau tạo nên sự sáng sủa.',
+        color: '#e11d48'
       }
     ]
   },
@@ -49,16 +54,41 @@ const mockDatabase = {
         type: 'Radical (Bộ thủ chỉ nghĩa)',
         char: '讠',
         pinyin: 'yán',
-        meaning: 'Ngôn (Lời nói). Cho biết chữ liên quan đến ngôn ngữ, giao tiếp.'
+        meaning: 'Ngôn (Lời nói). Cho biết chữ liên quan đến ngôn ngữ, giao tiếp.',
+        color: '#2563eb'
       },
       {
         type: 'Phonetic (Thành phần biểu âm)',
         char: '吾',
         pinyin: 'wú',
-        meaning: 'Ngô (Tôi). Gợi ý âm đọc.'
+        meaning: 'Ngô (Tôi). Gợi ý âm đọc.',
+        color: '#e11d48'
       }
     ]
   }
+}
+
+function HanziDisplay({ char }) {
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    if (!containerRef.current) return;
+    
+    // Xóa chữ cũ nếu có
+    containerRef.current.innerHTML = '';
+    
+    // Sử dụng HanziWriter để vẽ chữ và tô màu bộ thủ
+    HanziWriter.create(containerRef.current, char, {
+      width: 130,
+      height: 130,
+      padding: 0,
+      strokeColor: '#e11d48', // Màu đỏ cho phần biểu âm / phần còn lại
+      radicalColor: '#2563eb', // Màu xanh lam cho bộ thủ
+      showOutline: false
+    });
+  }, [char]);
+
+  return <div ref={containerRef} className="char-writer" />;
 }
 
 function App() {
@@ -96,12 +126,14 @@ function App() {
         <button type="submit" className="search-button">Phân tích</button>
       </form>
 
-      {error && <p style={{color: '#f87171', textAlign: 'center'}}>{error}</p>}
+      {error && <p style={{color: '#e11d48', textAlign: 'center', fontWeight: '500'}}>{error}</p>}
 
       {result && !error && (
         <div className="glass-panel">
           <div className="char-header">
-            <div className="char-large">{result.char}</div>
+            {/* Sử dụng component mới thay vì text thuần túy */}
+            <HanziDisplay char={result.char} />
+            
             <div className="char-info">
               <h2>{result.pinyin}</h2>
               <p>{result.meaning}</p>
@@ -111,11 +143,11 @@ function App() {
           <div className="components-grid">
             {result.components.map((comp, idx) => (
               <div key={idx} className="component-card">
-                <h3>{comp.type}</h3>
+                <h3 style={{ color: comp.color }}>{comp.type}</h3>
                 <div className="component-detail">
-                  <div className="comp-char">{comp.char}</div>
+                  <div className="comp-char" style={{ color: comp.color }}>{comp.char}</div>
                   <div className="comp-desc">
-                    <p className="pinyin">{comp.pinyin}</p>
+                    <p className="pinyin" style={{ color: comp.color }}>{comp.pinyin}</p>
                     <p>{comp.meaning}</p>
                   </div>
                 </div>
