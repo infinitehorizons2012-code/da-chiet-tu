@@ -139,10 +139,9 @@ function HanziDisplay({ char, components }) {
     components.forEach(comp => {
       if (comp.strokes) {
         comp.strokes.forEach(idx => {
-          // Bao phủ mọi cấu trúc thẻ SVG (cả trạng thái đứng im lẫn lúc đang vẽ animation)
+          // Bôi màu cho path thứ idx+1 bất kể nó nằm ở outline hay nét chính
           css += `
-            .custom-hanzi-colors svg path:nth-child(${idx + 1}),
-            .custom-hanzi-colors svg > g > g:nth-child(${idx + 1}) path {
+            .custom-hanzi-colors svg path:nth-child(${idx + 1}) {
               fill: ${comp.color} !important;
               stroke: ${comp.color} !important;
             }
