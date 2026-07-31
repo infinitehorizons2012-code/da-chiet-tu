@@ -13,14 +13,16 @@ const mockDatabase = {
         char: '女',
         pinyin: 'nǚ',
         meaning: 'Nữ (Phụ nữ). Cho biết chữ này liên quan đến phái nữ.',
-        color: '#2563eb' // Blue
+        color: '#2563eb', // Blue
+        strokes: [0, 1, 2]
       },
       {
         type: 'Phonetic (Thành phần biểu âm)',
         char: '马',
         pinyin: 'mǎ',
         meaning: 'Mã (Con ngựa). Gợi ý cách phát âm là "ma".',
-        color: '#e11d48' // Red
+        color: '#e11d48', // Red
+        strokes: [3, 4, 5]
       }
     ]
   },
@@ -34,14 +36,16 @@ const mockDatabase = {
         char: '日',
         pinyin: 'rì',
         meaning: 'Nhật (Mặt trời).',
-        color: '#2563eb'
+        color: '#2563eb',
+        strokes: [0, 1, 2, 3]
       },
       {
         type: 'Component (Thành phần)',
         char: '月',
         pinyin: 'yuè',
         meaning: 'Nguyệt (Mặt trăng). Mặt trời và mặt trăng ở cạnh nhau tạo nên sự sáng sủa.',
-        color: '#e11d48'
+        color: '#e11d48',
+        strokes: [4, 5, 6, 7]
       }
     ]
   },
@@ -55,14 +59,16 @@ const mockDatabase = {
         char: '讠',
         pinyin: 'yán',
         meaning: 'Ngôn (Lời nói). Cho biết chữ liên quan đến ngôn ngữ, giao tiếp.',
-        color: '#2563eb'
+        color: '#2563eb',
+        strokes: [0, 1]
       },
       {
         type: 'Phonetic (Thành phần biểu âm)',
         char: '吾',
         pinyin: 'wú',
         meaning: 'Ngô (Tôi). Gợi ý âm đọc.',
-        color: '#e11d48'
+        color: '#e11d48',
+        strokes: [2, 3, 4, 5, 6, 7, 8]
       }
     ]
   },
@@ -76,14 +82,16 @@ const mockDatabase = {
         char: '口',
         pinyin: 'kǒu',
         meaning: 'Khẩu (Miệng). Chỉ các hành động liên quan đến miệng như ăn, uống.',
-        color: '#2563eb'
+        color: '#2563eb',
+        strokes: [0, 1, 2]
       },
       {
         type: 'Phonetic (Thành phần biểu âm)',
         char: '乞',
         pinyin: 'qǐ',
         meaning: 'Khất (Ăn xin). Đóng vai trò biểu âm (mặc dù âm hiện đại đã biến đổi).',
-        color: '#e11d48'
+        color: '#e11d48',
+        strokes: [3, 4, 5]
       }
     ]
   },
@@ -97,27 +105,30 @@ const mockDatabase = {
         char: '十',
         pinyin: 'shí',
         meaning: 'Thập (Số 10). Đóng vai trò bộ thủ chính của chữ.',
-        color: '#2563eb'
+        color: '#2563eb', // Blue
+        strokes: [0, 1]
       },
       {
         type: 'Component (Thành phần)',
         char: '冂',
         pinyin: 'jiōng',
         meaning: 'Khuynh (Vùng không gian, bao quanh).',
-        color: '#e11d48'
+        color: '#e11d48', // Red
+        strokes: [2, 3]
       },
       {
         type: 'Component (Thành phần)',
         char: '𢆉',
         pinyin: 'yáng',
         meaning: 'Dạng cổ giống chữ 羊 (Dương - con cừu).',
-        color: '#e11d48'
+        color: '#059669', // Green
+        strokes: [4, 5, 6, 7, 8]
       }
     ]
   }
 }
 
-function HanziDisplay({ char }) {
+function HanziDisplay({ char, components }) {
   const containerRef = useRef(null);
 
   useEffect(() => {
@@ -126,16 +137,37 @@ function HanziDisplay({ char }) {
     // Xóa chữ cũ nếu có
     containerRef.current.innerHTML = '';
     
-    // Sử dụng HanziWriter để vẽ chữ và tô màu bộ thủ
+    // Sử dụng HanziWriter để vẽ chữ với màu mặc định nhạt
     HanziWriter.create(containerRef.current, char, {
       width: 130,
       height: 130,
       padding: 0,
-      strokeColor: '#e11d48', // Màu đỏ cho phần biểu âm / phần còn lại
-      radicalColor: '#2563eb', // Màu xanh lam cho bộ thủ
+      strokeColor: '#cbd5e1', // Màu xám nhạt cho các nét không được định nghĩa
+      radicalColor: null, // Tắt chế độ tự động tô màu bộ thủ
       showOutline: false
     });
-  }, [char]);
+
+    // Lắng nghe sự thay đổi của DOM để tô màu thủ công từng nét khi SVG được sinh ra
+    const observer = new MutationObserver((mutations, obs) => {
+      const paths = containerRef.current.querySelectorAll('svg > g > path');
+      if (paths.length > 0 && components) {
+        components.forEach(comp => {
+          if (comp.strokes) {
+            comp.strokes.forEach(idx => {
+              if (paths[idx]) {
+                paths[idx].setAttribute('fill', comp.color);
+              }
+            });
+          }
+        });
+        obs.disconnect(); // Dừng quan sát sau khi tô màu xong
+      }
+    });
+
+    observer.observe(containerRef.current, { childList: true, subtree: true });
+
+    return () => observer.disconnect();
+  }, [char, components]);
 
   return <div ref={containerRef} className="char-writer" />;
 }
@@ -180,8 +212,8 @@ function App() {
       {result && !error && (
         <div className="glass-panel">
           <div className="char-header">
-            {/* Sử dụng component mới thay vì text thuần túy */}
-            <HanziDisplay char={result.char} />
+            {/* Truyền thêm components vào để tô màu từng nét */}
+            <HanziDisplay char={result.char} components={result.components} />
             
             <div className="char-info">
               <h2>{result.pinyin}</h2>
