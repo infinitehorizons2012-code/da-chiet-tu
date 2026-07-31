@@ -131,62 +131,50 @@ const mockDatabase = {
 function HanziDisplay({ char, components }) {
   const containerRef = useRef(null);
 
+  // Tạo CSS tuỳ chỉnh bôi màu chính xác vào từng nét vẽ (stroke) dựa trên số thứ tự
+  // Dùng !important để ghi đè mọi inline style mà HanziWriter cố tình gắn vào
+  const customCss = useMemo(() => {
+    if (!components) return '';
+    let css = '';
+    components.forEach(comp => {
+      if (comp.strokes) {
+        comp.strokes.forEach(idx => {
+          // nth-child đếm từ 1, nên phải cộng 1
+          // HanziWriter thường để nét chính ở nhóm <g> cuối cùng
+          css += `
+            .char-wrapper-${char} svg g:last-of-type path:nth-child(${idx + 1}) {
+              fill: ${comp.color} !important;
+            }
+          `;
+        });
+      }
+    });
+    return css;
+  }, [char, components]);
+
   useEffect(() => {
     if (!containerRef.current) return;
     
     // Xóa chữ cũ nếu có
     containerRef.current.innerHTML = '';
     
-    // Sử dụng HanziWriter để vẽ chữ với màu mặc định nhạt
+    // Khởi tạo HanziWriter với màu nền xám nhạt
     HanziWriter.create(containerRef.current, char, {
       width: 130,
       height: 130,
       padding: 0,
-      strokeColor: '#cbd5e1', // Màu xám nhạt cho các nét không được định nghĩa
-      radicalColor: null, // Tắt chế độ tự động tô màu bộ thủ
+      strokeColor: '#cbd5e1', 
+      radicalColor: null, 
       showOutline: false
     });
+  }, [char]);
 
-    // HanziWriter tải dữ liệu bất đồng bộ. Dùng setInterval để đợi SVG render xong.
-    let retries = 0;
-    const interval = setInterval(() => {
-      retries++;
-      if (retries > 100) {
-        clearInterval(interval);
-        return;
-      }
-      
-      // Tìm tất cả thẻ path trong SVG
-      const allPaths = containerRef.current.querySelectorAll('svg path');
-      
-      // Nếu có thẻ path nghĩa là HanziWriter đã render xong
-      if (allPaths.length > 0) {
-        clearInterval(interval);
-        
-        // Nét chính luôn nằm ở group cuối cùng, ta lấy thẻ cha của path cuối cùng
-        const lastPath = allPaths[allPaths.length - 1];
-        const mainGroup = lastPath.parentNode;
-        const strokePaths = mainGroup.querySelectorAll('path');
-        
-        if (components) {
-          components.forEach(comp => {
-            if (comp.strokes) {
-              comp.strokes.forEach(idx => {
-                if (strokePaths[idx]) {
-                  // Phải dùng style.fill vì HanziWriter gắn màu bằng inline style
-                  strokePaths[idx].style.fill = comp.color;
-                }
-              });
-            }
-          });
-        }
-      }
-    }, 50);
-
-    return () => clearInterval(interval);
-  }, [char, components]);
-
-  return <div ref={containerRef} className="char-writer" />;
+  return (
+    <div className={`char-wrapper-${char}`}>
+      <style>{customCss}</style>
+      <div ref={containerRef} className="char-writer" />
+    </div>
+  );
 }
 
 function App() {
