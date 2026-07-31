@@ -124,7 +124,14 @@ function HanziDisplay({ char, components }) {
       radicalColor: null, 
       showOutline: false,
       strokeAnimationSpeed: 1.5,
-      delayBetweenStrokes: 150
+      delayBetweenStrokes: 150,
+      onLoadCharDataSuccess: () => {
+        setTimeout(() => {
+          if (writerRef.current) {
+            writerRef.current.animateCharacter();
+          }
+        }, 300); // 300ms delay for visual smoothness when loading
+      }
     });
   }, [char]);
 
