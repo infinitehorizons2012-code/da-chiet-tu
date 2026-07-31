@@ -113,6 +113,34 @@ h1 {
   border-bottom: 1px solid var(--border-color);
 }
 
+.char-display-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.animate-button {
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background-color: #f8fafc;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.animate-button:hover {
+  background-color: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.animate-button:active {
+  transform: scale(0.95);
+}
+
 .char-large {
   font-size: 7rem;
   line-height: 1;

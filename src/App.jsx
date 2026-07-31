@@ -130,19 +130,21 @@ const mockDatabase = {
 
 function HanziDisplay({ char, components }) {
   const containerRef = useRef(null);
+  const writerRef = useRef(null);
 
-  // Tạo CSS tuỳ chỉnh bôi màu chính xác vào từng nét vẽ (stroke) dựa trên số thứ tự
-  // Dùng !important để ghi đè mọi inline style mà HanziWriter cố tình gắn vào
+  // Tạo CSS tuỳ chỉnh bôi màu chính xác vào từng nét vẽ (stroke)
   const customCss = useMemo(() => {
     if (!components) return '';
     let css = '';
     components.forEach(comp => {
       if (comp.strokes) {
         comp.strokes.forEach(idx => {
-          // Bôi màu cho path thứ idx+1 bất kể nó nằm ở outline hay nét chính
+          // Bao phủ mọi cấu trúc thẻ SVG (cả trạng thái đứng im lẫn lúc đang vẽ animation)
           css += `
-            .custom-hanzi-colors svg path:nth-child(${idx + 1}) {
+            .custom-hanzi-colors svg path:nth-child(${idx + 1}),
+            .custom-hanzi-colors svg > g > g:nth-child(${idx + 1}) path {
               fill: ${comp.color} !important;
+              stroke: ${comp.color} !important;
             }
           `;
         });
@@ -154,24 +156,35 @@ function HanziDisplay({ char, components }) {
   useEffect(() => {
     if (!containerRef.current) return;
     
-    // Xóa chữ cũ nếu có
     containerRef.current.innerHTML = '';
     
-    // Khởi tạo HanziWriter với màu nền xám nhạt
-    HanziWriter.create(containerRef.current, char, {
-      width: 130,
-      height: 130,
-      padding: 0,
+    writerRef.current = HanziWriter.create(containerRef.current, char, {
+      width: 150,
+      height: 150,
+      padding: 5,
       strokeColor: '#cbd5e1', 
       radicalColor: null, 
-      showOutline: false
+      showOutline: false,
+      strokeAnimationSpeed: 1.5,
+      delayBetweenStrokes: 150
     });
   }, [char]);
 
+  const handleAnimate = () => {
+    if (writerRef.current) {
+      writerRef.current.animateCharacter();
+    }
+  };
+
   return (
-    <div className="custom-hanzi-colors">
-      <style>{customCss}</style>
-      <div ref={containerRef} className="char-writer" />
+    <div className="char-display-container">
+      <div className="custom-hanzi-colors" style={{cursor: 'pointer'}} onClick={handleAnimate} title="Nhấn để xem cách viết">
+        <style>{customCss}</style>
+        <div ref={containerRef} className="char-writer" />
+      </div>
+      <button className="animate-button" onClick={handleAnimate}>
+        ✍️ Xem cách viết
+      </button>
     </div>
   );
 }
