@@ -65,6 +65,27 @@ const mockDatabase = {
         color: '#e11d48'
       }
     ]
+  },
+  '吃': {
+    char: '吃',
+    pinyin: 'chī',
+    meaning: 'Ăn (Eat)',
+    components: [
+      {
+        type: 'Radical (Bộ thủ chỉ nghĩa)',
+        char: '口',
+        pinyin: 'kǒu',
+        meaning: 'Khẩu (Miệng). Chỉ các hành động liên quan đến miệng như ăn, uống.',
+        color: '#2563eb'
+      },
+      {
+        type: 'Phonetic (Thành phần biểu âm)',
+        char: '乞',
+        pinyin: 'qǐ',
+        meaning: 'Khất (Ăn xin). Đóng vai trò biểu âm (mặc dù âm hiện đại đã biến đổi).',
+        color: '#e11d48'
+      }
+    ]
   }
 }
 
@@ -105,7 +126,7 @@ function App() {
       setResult(mockDatabase[char])
       setError('')
     } else {
-      setError(`Chưa có dữ liệu cho chữ "${char}". Thử các chữ: 妈, 明, 语.`)
+      setError(`Chưa có dữ liệu cho chữ "${char}". Thử các chữ: 妈, 明, 语, 吃.`)
     }
   }
 
