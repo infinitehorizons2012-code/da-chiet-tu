@@ -211,6 +211,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: space-between;
   gap: 1.5rem; /* Reduced gap */
 }
 
@@ -224,6 +225,7 @@ body {
   flex: 1;
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
   position: relative;
   padding-left: 1rem;
 }
@@ -407,7 +409,6 @@ body {
 }
 
 .mnemonic-box {
-  margin-top: 1.5rem; /* matches the gap in components-list */
   border: 1px solid var(--line-color);
   border-radius: 12px;
   padding: 1rem 1.5rem;
@@ -418,19 +419,4 @@ body {
   position: relative;
   box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.05);
   color: var(--accent-red);
-}
-
-/* Bracket connection line for the components (Optional) */
-.components-list::before {
-  content: '';
-  position: absolute;
-  left: 60px; /* align with comp-char */
-  top: 40px;
-  bottom: 40px;
-  width: 16px;
-  border-left: 2px solid var(--line-color);
-  border-top: 2px solid var(--line-color);
-  border-bottom: 2px solid var(--line-color);
-  z-index: 0;
-  opacity: 0.3;
 }
