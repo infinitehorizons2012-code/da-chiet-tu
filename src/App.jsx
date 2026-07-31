@@ -51,6 +51,43 @@ const mockDatabase = {
   }
 }
 
+function Header() {
+  return (
+    <header className="app-header">
+      <div className="header-left">
+        <div className="logo-icon">字</div>
+        <div className="logo-text">
+          <span className="title">Bản đồ Chiết tự</span>
+          <span className="subtitle">HỆ THỐNG PHÂN TÍCH CHỮ HÁN</span>
+        </div>
+      </div>
+      
+      <nav className="header-nav">
+        <button className="nav-item active">
+          <span className="nav-icon">🔍</span> Tra cứu
+        </button>
+        <button className="nav-item">
+          <span className="nav-icon">📚</span> Tổng hợp
+        </button>
+        <button className="nav-item">
+          <span className="nav-icon">📝</span> Luyện tập
+        </button>
+        <button className="nav-item">
+          <span className="nav-icon">🎮</span> Trắc nghiệm
+        </button>
+      </nav>
+
+      <div className="header-right">
+        <div className="user-info">
+          <span className="username">hang</span>
+          <span className="user-xp">⚡ 90 XP</span>
+        </div>
+        <button className="icon-button">🚪</button>
+      </div>
+    </header>
+  );
+}
+
 function HanziDisplay({ char, components }) {
   const containerRef = useRef(null);
   const writerRef = useRef(null);
@@ -130,7 +167,7 @@ function App() {
 
   return (
     <div className="app-container">
-      <h1 className="main-title">Bản đồ Chiết tự</h1>
+      <Header />
 
       <form className="search-container" onSubmit={handleSearch}>
         <input 
