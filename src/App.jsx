@@ -54,13 +54,13 @@ const mockDatabase = {
     pinyin: 'dé',
     hanviet: 'ĐỨC',
     meaning: 'Đạo đức, ân đức',
-    mnemonic: 'Chim chích mà đậu cành tre, Thập trên, Tứ dưới, Nhất đè chữ Tâm',
+    mnemonic: 'Hành động (彳) quang minh, dù mười (十) con mắt (罒/目) soi xét vẫn giữ một (一) tấm lòng (心) ngay thẳng (Thập Mục Nhất Tâm).',
     components: [
-      { type: 'Radical', char: '彳', pinyin: 'chì', hanviet: 'XÍCH', keyword: 'chim chích', color: '#3b82f6', strokes: [0, 1, 2], imageUrl: '' },
-      { type: 'Component', char: '十', pinyin: 'shí', hanviet: 'THẬP', keyword: 'thập trên', color: '#10b981', strokes: [3, 4], imageUrl: '' },
-      { type: 'Component', char: '罒', pinyin: 'wǎng', hanviet: 'TỨ', keyword: 'tứ dưới', color: '#eab308', strokes: [5, 6, 7, 8, 9], imageUrl: '' },
-      { type: 'Component', char: '一', pinyin: 'yī', hanviet: 'NHẤT', keyword: 'nhất đè', color: '#a855f7', strokes: [10], imageUrl: '' },
-      { type: 'Component', char: '心', pinyin: 'xīn', hanviet: 'TÂM', keyword: 'chữ tâm', color: '#ef4444', strokes: [11, 12, 13, 14], imageUrl: '' }
+      { type: 'Radical', char: '彳', pinyin: 'chì', hanviet: 'XÍCH', keyword: 'hành động', color: '#3b82f6', strokes: [0, 1, 2], imageUrl: '' },
+      { type: 'Component', char: '十', pinyin: 'shí', hanviet: 'THẬP', keyword: 'mười', color: '#10b981', strokes: [3, 4], imageUrl: '' },
+      { type: 'Component', char: '罒', pinyin: 'mù', hanviet: 'MỤC (Mắt)', keyword: 'con mắt', color: '#eab308', strokes: [5, 6, 7, 8, 9], imageUrl: '' },
+      { type: 'Component', char: '一', pinyin: 'yī', hanviet: 'NHẤT', keyword: 'một', color: '#a855f7', strokes: [10], imageUrl: '' },
+      { type: 'Component', char: '心', pinyin: 'xīn', hanviet: 'TÂM', keyword: 'tấm lòng', color: '#ef4444', strokes: [11, 12, 13, 14], imageUrl: '' }
     ]
   }
 }
