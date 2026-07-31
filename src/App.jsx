@@ -156,12 +156,17 @@ function HanziDisplay({ char, components }) {
         return;
       }
       
-      // Nhóm g cuối cùng trong SVG chứa các nét vẽ (foreground strokes)
-      const strokePaths = containerRef.current.querySelectorAll('svg > g:last-child > path');
+      // Tìm tất cả thẻ path trong SVG
+      const allPaths = containerRef.current.querySelectorAll('svg path');
       
-      // Nếu số nét vẽ > 0 nghĩa là HanziWriter đã render xong
-      if (strokePaths.length > 0) {
+      // Nếu có thẻ path nghĩa là HanziWriter đã render xong
+      if (allPaths.length > 0) {
         clearInterval(interval);
+        
+        // Nét chính luôn nằm ở group cuối cùng, ta lấy thẻ cha của path cuối cùng
+        const lastPath = allPaths[allPaths.length - 1];
+        const mainGroup = lastPath.parentNode;
+        const strokePaths = mainGroup.querySelectorAll('path');
         
         if (components) {
           components.forEach(comp => {
