@@ -185,59 +185,53 @@ function App() {
 
       {result && !error && (
         <div className="infographic-panel">
-          {/* CỘT TRÁI: Chữ Hán chính & Thông tin */}
-          <div className="left-column">
+          {/* Khu vực 1: Từ và cách viết (top-left) */}
+          <div className="quadrant-top-left">
             <HanziDisplay char={result.char} components={result.components} />
-            
-            <div className="info-block">
-              <div className="info-pinyin">{result.pinyin}</div>
-              <div className="info-hanviet">{result.hanviet}</div>
-              <div className="info-meaning">{result.meaning}</div>
-            </div>
           </div>
 
-          {/* ĐƯỜNG CHIA CẮT GIỮA (Tuỳ chọn) */}
+          {/* Đường chia cắt giữa */}
           <div className="divider-line"></div>
 
-          {/* CỘT PHẢI: Sơ đồ tư duy */}
-          <div className="right-column">
-            <div className="components-list">
-              {result.components.map((comp, idx) => (
-                <div key={idx} className="breakdown-row">
-                  {/* Chữ Hán của bộ thủ */}
-                  <div className="comp-char-block">
-                    <div className="comp-char-large" style={{ color: comp.color }}>
-                      {comp.char}
-                    </div>
-                    <div className="comp-hanviet">{comp.hanviet}</div>
+          {/* Khu vực 2: Chiết tự (top-right) */}
+          <div className="components-list">
+            {result.components.map((comp, idx) => (
+              <div key={idx} className="breakdown-row">
+                <div className="comp-char-block">
+                  <div className="comp-char-large" style={{ color: comp.color }}>
+                    {comp.char}
                   </div>
-                  
-                  {/* Mũi tên trỏ ngang */}
-                  <div className="horizontal-arrow">→</div>
-                  
-                  {/* Chỗ trống chèn ảnh minh hoạ */}
-                  <div className="comp-image-placeholder">
-                    {comp.imageUrl ? (
-                      <img src={comp.imageUrl} alt={comp.keyword} />
-                    ) : (
-                      <div className="placeholder-box">Ảnh<br/>{comp.keyword}</div>
-                    )}
-                  </div>
-                  
-                  {/* Hộp từ khóa (có đường nối dọc xuống hộp dưới) */}
-                  <div className="comp-keyword-wrapper">
-                    <div className="comp-keyword-box">{comp.keyword}</div>
-                    {/* Mũi tên dọc nối xuống bộ thủ tiếp theo hoặc câu thần chú */}
-                    <div className="vertical-arrow"></div>
-                  </div>
+                  <div className="comp-hanviet">{comp.hanviet}</div>
                 </div>
-              ))}
-            </div>
+                
+                <div className="horizontal-arrow">→</div>
+                
+                <div className="comp-image-placeholder">
+                  {comp.imageUrl ? (
+                    <img src={comp.imageUrl} alt={comp.keyword} />
+                  ) : (
+                    <div className="placeholder-box">Ảnh<br/>{comp.keyword}</div>
+                  )}
+                </div>
+                
+                <div className="comp-keyword-wrapper">
+                  <div className="comp-keyword-box">{comp.keyword}</div>
+                  <div className="vertical-arrow"></div>
+                </div>
+              </div>
+            ))}
+          </div>
 
-            {/* Khung Thần chú */}
-            <div className="mnemonic-box">
-              {result.mnemonic}
-            </div>
+          {/* Khu vực 3: Pinyin + Nghĩa + Hán Việt (bottom-left) */}
+          <div className="info-block">
+            <div className="info-pinyin">{result.pinyin}</div>
+            <div className="info-hanviet">{result.hanviet}</div>
+            <div className="info-meaning">{result.meaning}</div>
+          </div>
+
+          {/* Khu vực 4: Giải thích / Thần chú (bottom-right) */}
+          <div className="mnemonic-box">
+            {result.mnemonic}
           </div>
         </div>
       )}

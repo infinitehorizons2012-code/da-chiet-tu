@@ -193,41 +193,37 @@ body {
   font-weight: bold;
 }
 
-/* Infographic Layout */
+/* Infographic Layout (4 Quadrants) */
 .infographic-panel {
-  display: flex;
-  gap: 1.5rem; /* Reduced gap */
+  display: grid;
+  grid-template-areas:
+    "top-left divider top-right"
+    "bottom-left divider bottom-right";
+  grid-template-columns: 300px 2px 1fr;
+  grid-template-rows: 1fr auto;
+  gap: 1.5rem 2rem; /* row-gap, col-gap */
   border: 1px solid var(--border-light);
   border-radius: 16px;
-  padding: 1.5rem; /* Reduced padding */
+  padding: 1.5rem;
   background-color: var(--panel-bg);
-  position: relative;
-  align-items: stretch;
   box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.05);
 }
 
-.left-column {
-  flex: 0 0 300px;
+.quadrant-top-left {
+  grid-area: top-left;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  gap: 1.5rem; /* Reduced gap */
+  justify-content: center; /* Center vertically if right side is taller */
+  gap: 1.5rem;
 }
 
 .divider-line {
+  grid-area: divider;
   width: 2px;
   background-color: var(--border-light);
   border-radius: 1px;
-}
-
-.right-column {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  position: relative;
-  padding-left: 1rem;
+  height: 100%;
 }
 
 /* Left Column Styling */
@@ -259,6 +255,8 @@ body {
 }
 
 .info-block {
+  grid-area: bottom-left;
+  align-self: end;
   display: grid;
   grid-template-columns: 1fr 1fr;
   border: 1px solid var(--border-light);
@@ -296,6 +294,7 @@ body {
 
 /* Right Column Styling */
 .components-list {
+  grid-area: top-right;
   display: flex;
   flex-direction: column;
   gap: 1.5rem; /* Reduced gap from 3rem to 1.5rem */
@@ -409,6 +408,8 @@ body {
 }
 
 .mnemonic-box {
+  grid-area: bottom-right;
+  align-self: end;
   border: 1px solid var(--line-color);
   border-radius: 12px;
   padding: 1rem 1.5rem;
