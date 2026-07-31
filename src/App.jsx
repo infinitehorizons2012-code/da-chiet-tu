@@ -139,10 +139,9 @@ function HanziDisplay({ char, components }) {
     components.forEach(comp => {
       if (comp.strokes) {
         comp.strokes.forEach(idx => {
-          // nth-child đếm từ 1, nên phải cộng 1
-          // HanziWriter thường để nét chính ở nhóm <g> cuối cùng
+          // Bôi màu cho path thứ idx+1 bất kể nó nằm ở outline hay nét chính
           css += `
-            .char-wrapper-${char} svg g:last-of-type path:nth-child(${idx + 1}) {
+            .custom-hanzi-colors svg path:nth-child(${idx + 1}) {
               fill: ${comp.color} !important;
             }
           `;
@@ -150,7 +149,7 @@ function HanziDisplay({ char, components }) {
       }
     });
     return css;
-  }, [char, components]);
+  }, [components]);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -170,7 +169,7 @@ function HanziDisplay({ char, components }) {
   }, [char]);
 
   return (
-    <div className={`char-wrapper-${char}`}>
+    <div className="custom-hanzi-colors">
       <style>{customCss}</style>
       <div ref={containerRef} className="char-writer" />
     </div>
