@@ -48,6 +48,20 @@ const mockDatabase = {
       { type: 'Component', char: '人', pinyin: 'rén', hanviet: 'NHÂN', keyword: 'con người', color: '#e11d48', strokes: [3, 4], imageUrl: '' },
       { type: 'Component', char: '木', pinyin: 'mù', hanviet: 'MỘC', keyword: 'cây', color: '#059669', strokes: [5, 6, 7, 8], imageUrl: '' }
     ]
+  },
+  '德': {
+    char: '德',
+    pinyin: 'dé',
+    hanviet: 'ĐỨC',
+    meaning: 'Đạo đức, ân đức',
+    mnemonic: 'Chim chích mà đậu cành tre, Thập trên, Tứ dưới, Nhất đè chữ Tâm',
+    components: [
+      { type: 'Radical', char: '彳', pinyin: 'chì', hanviet: 'XÍCH', keyword: 'chim chích', color: '#3b82f6', strokes: [0, 1, 2], imageUrl: '' },
+      { type: 'Component', char: '十', pinyin: 'shí', hanviet: 'THẬP', keyword: 'thập trên', color: '#10b981', strokes: [3, 4], imageUrl: '' },
+      { type: 'Component', char: '罒', pinyin: 'wǎng', hanviet: 'TỨ', keyword: 'tứ dưới', color: '#eab308', strokes: [5, 6, 7, 8, 9], imageUrl: '' },
+      { type: 'Component', char: '一', pinyin: 'yī', hanviet: 'NHẤT', keyword: 'nhất đè', color: '#a855f7', strokes: [10], imageUrl: '' },
+      { type: 'Component', char: '心', pinyin: 'xīn', hanviet: 'TÂM', keyword: 'chữ tâm', color: '#ef4444', strokes: [11, 12, 13, 14], imageUrl: '' }
+    ]
   }
 }
 
@@ -168,7 +182,7 @@ function App() {
       setResult(mockDatabase[char])
       setError('')
     } else {
-      setError(`Chưa có dữ liệu cho chữ "${char}". Thử các chữ: 妈, 明, 南, 茶.`)
+      setError(`Chưa có dữ liệu cho chữ "${char}". Thử các chữ: 妈, 明, 南, 茶, 德.`)
     }
   }
 
