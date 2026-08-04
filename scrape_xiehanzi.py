@@ -69,9 +69,9 @@ def run():
             print(f"Warning: The following characters were not found in Excel: {', '.join(not_found)}")
             
     else:
-        # Fallback to automatic mode disabled
-        print("No --chars provided. Exiting. (Automatic batch mode disabled).")
-        return
+        # Fallback to automatic mode
+        mask = pd.isna(df['Bộ thủ & thành phần_Xie']) | (df['Bộ thủ & thành phần_Xie'] == '')
+        to_scrape = df[mask].head(BATCH_SIZE)
         
     if len(to_scrape) == 0:
         print("No valid characters to scrape from XieHanzi!")
