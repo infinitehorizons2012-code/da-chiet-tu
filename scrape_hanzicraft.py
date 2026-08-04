@@ -19,6 +19,7 @@ def parse_character(page, char):
         
         breakdown_str = ""
         components_str = ""
+        appears_in_str = ""
         
         rows = page.query_selector_all('.decomp-row')
         for row in rows:
@@ -31,9 +32,7 @@ def parse_character(page, char):
                 dtree = row.query_selector('.dtree')
                 if dtree:
                     boxes = dtree.query_selector_all('.dtree-box')
-                    # Just grab all text from boxes, except the first one if it's the root char
                     chars = [b.inner_text() for b in boxes]
-                    # Hanzicraft tree structure can be complex, let's just join them
                     breakdown_str = ", ".join(chars)
                     
             elif 'Components' in text:
@@ -49,10 +48,15 @@ def parse_character(page, char):
                         comp_list.append(f"{c_text} {m_text}")
                     components_str = ", ".join(comp_list)
                     
-        return breakdown_str, components_str
+        appear_box = page.query_selector('.appearsinbox')
+        if appear_box:
+            links = appear_box.query_selector_all('a')
+            appears_in_str = "".join([a.inner_text() for a in links])
+                    
+        return breakdown_str, components_str, appears_in_str
     except Exception as e:
         print(f"[{char}] Error: {e}")
-        return None, None
+        return None, None, None
 
 def run():
     print("Loading data...")
@@ -62,6 +66,8 @@ def run():
         df['Components_Hanzicraft'] = None
     if 'Breakdown' not in df.columns:
         df['Breakdown'] = None
+    if 'Appears_In' not in df.columns:
+        df['Appears_In'] = None
         
     # Find rows that need scraping
     mask = pd.isna(df['Components_Hanzicraft']) | (df['Components_Hanzicraft'] == '')
@@ -85,11 +91,12 @@ def run():
             char = row['Chữ Trung Quốc']
             print(f"Processing {char}...")
             
-            b, c = parse_character(page, char)
-            if b is not None or c is not None:
+            b, c, a = parse_character(page, char)
+            if b is not None or c is not None or a is not None:
                 df.at[idx, 'Breakdown'] = b
                 df.at[idx, 'Components_Hanzicraft'] = c
-                print(f"[{char}] Breakdown: {b} | Components: {c}")
+                df.at[idx, 'Appears_In'] = a
+                print(f"[{char}] Breakdown: {b} | Components: {c} | Appears_In: {a[:20]}...")
             
             time.sleep(random.uniform(2, 5))
             
