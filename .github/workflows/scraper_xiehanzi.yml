@@ -1,11 +1,12 @@
 name: Scrape XieHanzi
 
 on:
-  schedule:
-    # Chạy mỗi 2 tiếng một lần, so le với Hanzicraft (phút 30)
-    - cron: "30 */2 * * *"
   workflow_dispatch:
-    # Cho phép bấm nút chạy thủ công
+    inputs:
+      chars:
+        description: 'Danh sách chữ cần cào (cách nhau bởi khoảng trắng)'
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -28,7 +29,7 @@ jobs:
           pip install pandas openpyxl requests beautifulsoup4
 
       - name: Run Scraper
-        run: python scrape_xiehanzi.py
+        run: python scrape_xiehanzi.py --chars "${{ github.event.inputs.chars }}"
 
       - name: Commit and Push changes
         uses: stefanzweifel/git-auto-commit-action@v5

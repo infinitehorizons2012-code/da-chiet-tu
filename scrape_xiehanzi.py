@@ -39,7 +39,13 @@ def parse_character(char):
         print(f"[{char}] Error: {e}")
         return None, None, None, None
 
+import argparse
+
 def run():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--chars', type=str, help='Danh sách các chữ cần cào, cách nhau bởi khoảng trắng')
+    args = parser.parse_args()
+
     print("Loading data...")
     df = pd.read_excel(FILE_PATH)
     
@@ -48,15 +54,29 @@ def run():
         if col not in df.columns:
             df[col] = None
             
-    # Find rows that need scraping
-    mask = pd.isna(df['Bộ thủ & thành phần_Xie']) | (df['Bộ thủ & thành phần_Xie'] == '')
-    to_scrape = df[mask]
-    
-    if len(to_scrape) == 0:
-        print("All characters have been scraped from XieHanzi!")
+    if args.chars:
+        # User provided manual list
+        char_list = args.chars.strip().split()
+        print(f"Manual mode: Requested {len(char_list)} characters.")
+        
+        # Only select rows that match the provided characters
+        mask = df['Chữ Trung Quốc'].isin(char_list)
+        to_scrape = df[mask]
+        
+        found_chars = to_scrape['Chữ Trung Quốc'].tolist()
+        not_found = set(char_list) - set(found_chars)
+        if not_found:
+            print(f"Warning: The following characters were not found in Excel: {', '.join(not_found)}")
+            
+    else:
+        # Fallback to automatic mode disabled
+        print("No --chars provided. Exiting. (Automatic batch mode disabled).")
         return
         
-    to_scrape = to_scrape.head(BATCH_SIZE)
+    if len(to_scrape) == 0:
+        print("No valid characters to scrape from XieHanzi!")
+        return
+        
     print(f"Scraping batch of {len(to_scrape)} characters from XieHanzi...")
     
     for idx, row in to_scrape.iterrows():

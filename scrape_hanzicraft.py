@@ -58,7 +58,13 @@ def parse_character(page, char):
         print(f"[{char}] Error: {e}")
         return None, None, None
 
+import argparse
+
 def run():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--chars', type=str, help='Danh sách các chữ cần cào, cách nhau bởi khoảng trắng')
+    args = parser.parse_args()
+
     print("Loading data...")
     df = pd.read_excel(FILE_PATH)
     
@@ -69,15 +75,29 @@ def run():
     if 'Appears_In' not in df.columns:
         df['Appears_In'] = None
         
-    # Find rows that need scraping
-    mask = pd.isna(df['Components_Hanzicraft']) | (df['Components_Hanzicraft'] == '')
-    to_scrape = df[mask]
-    
-    if len(to_scrape) == 0:
-        print("All characters have been scraped!")
+    if args.chars:
+        # User provided manual list
+        char_list = args.chars.strip().split()
+        print(f"Manual mode: Requested {len(char_list)} characters.")
+        
+        # Only select rows that match the provided characters
+        mask = df['Chữ Trung Quốc'].isin(char_list)
+        to_scrape = df[mask]
+        
+        found_chars = to_scrape['Chữ Trung Quốc'].tolist()
+        not_found = set(char_list) - set(found_chars)
+        if not_found:
+            print(f"Warning: The following characters were not found in Excel: {', '.join(not_found)}")
+            
+    else:
+        # Fallback to automatic mode (if you still want it, but we won't trigger it via cron)
+        print("No --chars provided. Exiting. (Automatic batch mode disabled).")
         return
         
-    to_scrape = to_scrape.head(BATCH_SIZE)
+    if len(to_scrape) == 0:
+        print("No valid characters to scrape!")
+        return
+        
     print(f"Scraping batch of {len(to_scrape)} characters...")
     
     with sync_playwright() as p:
@@ -96,7 +116,8 @@ def run():
                 df.at[idx, 'Breakdown'] = b
                 df.at[idx, 'Components_Hanzicraft'] = c
                 df.at[idx, 'Appears_In'] = a
-                print(f"[{char}] Breakdown: {b} | Components: {c} | Appears_In: {a[:20]}...")
+                a_str = a[:20] + "..." if a else ""
+                print(f"[{char}] Breakdown: {b} | Components: {c} | Appears_In: {a_str}")
             
             time.sleep(random.uniform(2, 5))
             

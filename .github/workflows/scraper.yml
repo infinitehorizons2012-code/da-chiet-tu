@@ -1,11 +1,12 @@
 name: Scrape Hanzicraft
 
 on:
-  schedule:
-    # Chạy mỗi 2 tiếng một lần để không bị khóa IP
-    - cron: "0 */2 * * *"
   workflow_dispatch:
-    # Cho phép bấm nút chạy thủ công
+    inputs:
+      chars:
+        description: 'Danh sách chữ cần cào (cách nhau bởi khoảng trắng)'
+        required: true
+        type: string
 
 permissions:
   contents: write
@@ -29,7 +30,7 @@ jobs:
           playwright install chromium
 
       - name: Run Scraper
-        run: python scrape_hanzicraft.py
+        run: python scrape_hanzicraft.py --chars "${{ github.event.inputs.chars }}"
 
       - name: Commit and Push changes
         uses: stefanzweifel/git-auto-commit-action@v5
