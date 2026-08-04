@@ -7,6 +7,9 @@ on:
   workflow_dispatch:
     # Cho phép bấm nút chạy thủ công
 
+permissions:
+  contents: write
+
 jobs:
   scrape:
     runs-on: ubuntu-latest
@@ -29,9 +32,7 @@ jobs:
         run: python scrape_hanzicraft.py
 
       - name: Commit and Push changes
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git add hanzicraft_dashboard_reordered.xlsx
-          # Only commit if there are changes
-          git diff --quiet && git diff --staged --quiet || (git commit -m "Auto-scrape Breakdown & Components batch" && git pull --rebase && git push)
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "Auto-scrape Breakdown & Components batch"
+          file_pattern: "hanzicraft_dashboard_reordered.xlsx"
