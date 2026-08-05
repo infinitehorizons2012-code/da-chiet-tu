@@ -93,6 +93,12 @@ def run():
         else:
             print(f"[{char}] No data found.")
             
+        # Lưu file Excel tạm mỗi 100 chữ để chống mất dữ liệu nếu bị lỗi giữa chừng
+        if (idx + 1) % 100 == 0:
+            print(f"--- Đã cào được {idx + 1} chữ, tiến hành lưu tạm (Backup)... ---")
+            with pd.ExcelWriter(FILE_PATH, engine='openpyxl') as writer:
+                df.to_excel(writer, index=False)
+                
         time.sleep(random.uniform(0.5, 1.5)) # XieHanzi is fast, no need to wait too long
         
     print("Saving to Excel...")
