@@ -1,13 +1,11 @@
 name: Scrape XieHanzi
 
 on:
-  schedule:
-    - cron: "30 */2 * * *"
   workflow_dispatch:
     inputs:
       chars:
-        description: 'Danh sách chữ cần cào (cách nhau bởi khoảng trắng)'
-        required: true
+        description: 'Danh sách chữ cần cào (cách nhau bởi khoảng trắng - để trống nếu muốn cào TẤT CẢ chữ còn thiếu)'
+        required: false
         type: string
 
 permissions:

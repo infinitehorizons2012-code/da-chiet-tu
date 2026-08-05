@@ -5,7 +5,7 @@ import time
 import random
 
 FILE_PATH = 'hanzicraft_dashboard_reordered.xlsx'
-BATCH_SIZE = 200
+BATCH_SIZE = 9000
 
 def get_section(soup, title_text):
     heading = soup.find(lambda tag: tag.name in ['h2', 'h3'] and title_text.lower() in tag.text.lower())
