@@ -3,6 +3,10 @@ import requests
 from bs4 import BeautifulSoup
 import time
 import random
+import sys
+import io
+
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 
 FILE_PATH = 'hanzicraft_dashboard_reordered.xlsx'
 BATCH_SIZE = 9000
@@ -81,6 +85,11 @@ def run():
     
     for idx, row in to_scrape.iterrows():
         char = row['Chữ Trung Quốc']
+        if pd.isna(char) or str(char).strip() == '' or str(char) == 'nan':
+            print(f"[{char}] Invalid character. Marking N/A.")
+            df.at[idx, 'Bộ thủ & thành phần_Xie'] = 'N/A'
+            continue
+
         print(f"Processing {char}...")
         
         b, h, t, d = parse_character(char)
@@ -91,7 +100,8 @@ def run():
             df.at[idx, 'Dễ nhầm & Liên quan_Xie'] = d
             print(f"[{char}] Success.")
         else:
-            print(f"[{char}] No data found.")
+            print(f"[{char}] No data found. Marking N/A.")
+            df.at[idx, 'Bộ thủ & thành phần_Xie'] = 'N/A'
             
         # Lưu file Excel tạm mỗi 100 chữ để chống mất dữ liệu nếu bị lỗi giữa chừng
         if (idx + 1) % 100 == 0:
