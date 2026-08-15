@@ -28,8 +28,8 @@ jobs:
           python -m pip install --upgrade pip
           pip install pandas openpyxl requests beautifulsoup4
 
-      - name: Run Scraper
-        run: python scrape_xiehanzi.py --chars "${{ github.event.inputs.chars }}"
+      - name: Run Rich XieHanzi Scraper
+        run: python scrape_xiehanzi_rich.py
 
       - name: Commit and Push changes
         uses: stefanzweifel/git-auto-commit-action@v5
