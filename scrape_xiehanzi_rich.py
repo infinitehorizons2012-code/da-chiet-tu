@@ -13,6 +13,11 @@ sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='repla
 FILE_PATH = 'hanzicraft_dashboard_reordered.xlsx'
 MAX_WORKERS = 15
 
+def clean_string(val):
+    if not isinstance(val, str):
+        return val
+    return re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f]', '', val)
+
 def parse_xiehanzi_full(char):
     if pd.isna(char) or str(char).strip() == '' or str(char) == 'nan':
         return None
@@ -86,12 +91,12 @@ def parse_xiehanzi_full(char):
 
         return {
             'char': char_str,
-            'pinyin': pinyin,
-            'am_han_viet': am_han_viet,
-            'nghia_tv': nghia_tv,
-            'audio': audio_link,
-            'loai_tu': loai_tu_cach_dung,
-            'nghia_cach_dung_tu': nghia_cach_dung_tu
+            'pinyin': clean_string(pinyin),
+            'am_han_viet': clean_string(am_han_viet),
+            'nghia_tv': clean_string(nghia_tv),
+            'audio': clean_string(audio_link),
+            'loai_tu': clean_string(loai_tu_cach_dung),
+            'nghia_cach_dung_tu': clean_string(nghia_cach_dung_tu)
         }
     except Exception as e:
         return {
