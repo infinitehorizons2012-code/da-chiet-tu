@@ -1,0 +1,1808 @@
+/* === Rare CJK glyph web fonts ===
+   Some decomposition components are rare CJK Extension characters (e.g. 𪞐 in 摘,
+   or 𲰸 in a Plane-3 breakdown) that most system fonts lack, so they render as
+   tofu boxes. These three self-hosted subsets (built from Noto Sans CJK +
+   Plangothic P1/P2, ~28KB total) supply exactly the rare glyphs the site can
+   display: hanzi-rare-noto (BMP — Radicals, Kangxi, CJK Strokes, Ext A),
+   hanzi-rare-plan (Plane 2 — Ext B/C… from Plangothic P1), and hanzi-rare-plan2
+   (Plane 3 — Ext G/H… from Plangothic P2). Each is scoped with unicode-range so
+   the browser only downloads a file when a page actually contains one of those
+   codepoints, and never for common Han or Latin text. All share the family name
+   so the base body font-family just lists it first.
+   To regenerate after a data/decomposition change, see scripts/build-rare-cjk-font.js.
+
+   CACHE BUSTING: the ?version=N on each url() is the ONLY thing that busts the
+   font at Cloudflare's edge (the filename never changes, and .woff2 is cached
+   aggressively). Whenever you rebuild the font bytes, bump BOTH numbers below
+   AND the /style.css?version=N in views/layout.pug — clients must re-fetch the
+   CSS first to even see the new font URL. (Query-string busting relies on the
+   default Cloudflare cache level keying on the full URL; if that's ever changed
+   to "Ignore query string", rename the files instead, e.g. -v2.woff2.) */
+@font-face {
+	font-family: 'HanziRare';
+	font-style: normal;
+	font-weight: normal;
+	font-display: swap;
+	src: url('/fonts/hanzi-rare-noto.woff2?version=2') format('woff2');
+	unicode-range: U+2E80,U+2E81,U+2E88,U+2E8A,U+2E8C,U+2E8D,U+2E95,U+2E99,U+2EA7,U+2EAA,U+2EAE,U+2EB3,U+2EB6,U+2EBA,U+2EBB,U+2EBC,U+2ECA,U+2EED,U+31C0,U+31C1,U+31C2,U+31C3,U+31C5,U+31C6,U+31C7,U+31C8,U+31C9,U+31CA,U+31CB,U+31CC,U+31CE,U+31CF,U+31D2,U+31D5,U+31D6,U+31D7,U+31D9,U+31DB,U+31DC,U+31DD,U+31E0,U+3404,U+3406,U+340C,U+342C,U+3431,U+34B8,U+34DE,U+353E,U+353F,U+3561,U+3563,U+35CA,U+3698,U+3741,U+3749,U+3774,U+3775,U+37A2,U+3829,U+382F,U+3840,U+3886,U+38CE,U+38FA,U+39DC,U+3A28,U+3A45,U+3B0E,U+3B30,U+3E12,U+3E1A,U+3F0C,U+4020,U+43CC,U+43CD,U+43CE,U+4491,U+459D,U+45AD,U+45B5,U+470C,U+49F9,U+4A57,U+4A6D,U+4A7B;
+}
+@font-face {
+	font-family: 'HanziRare';
+	font-style: normal;
+	font-weight: normal;
+	font-display: swap;
+	src: url('/fonts/hanzi-rare-plan.woff2?version=2') format('woff2');
+	unicode-range: U+20010,U+20063,U+20073,U+2007C,U+20087,U+20089,U+2008B,U+2008E,U+200A4,U+200D3,U+200DC,U+200E7,U+20110,U+201CD,U+2020C,U+204DC,U+2050A,U+20541,U+2057D,U+20628,U+20675,U+20695,U+20835,U+208DC,U+2090F,U+20915,U+20A9A,U+20AD4,U+20AE4,U+20B1D,U+20B9B,U+20BA6,U+20BF3,U+20C60,U+20CCB,U+21240,U+21552,U+21559,U+215D7,U+215DC,U+215DE,U+216AC,U+21C25,U+21C2A,U+21C2F,U+21C52,U+21CFE,U+21D0E,U+21D87,U+21FEA,U+22033,U+22189,U+221B6,U+221C1,U+223A8,U+22451,U+226F3,U+2298F,U+22F04,U+23091,U+23369,U+23377,U+23386,U+2389F,U+23942,U+239BC,U+23AA0,U+23CFE,U+23D92,U+244EF,U+2456A,U+24570,U+2457B,U+24CB6,U+24D13,U+24F44,U+24FFA,U+25051,U+25053,U+25055,U+250ED,U+250F2,U+26222,U+2626B,U+26407,U+26672,U+2668F,U+268DE,U+268FB,U+26951,U+2696F,U+271A8,U+27239,U+27607,U+276F1,U+27C28,U+28211,U+282A5,U+2882D,U+2896B,U+28FB4,U+2950A,U+2967F,U+29810,U+2A70B,U+2A790,U+2A9F7,U+2ABE7,U+2B0E2,U+2B55B,U+2B572,U+2B576;
+}
+@font-face {
+	font-family: 'HanziRare';
+	font-style: normal;
+	font-weight: normal;
+	font-display: swap;
+	src: url('/fonts/hanzi-rare-plan2.woff2?version=1') format('woff2');
+	unicode-range: U+32C38;
+}
+
+/* === Nunito (dashboard UI font) ===
+   Self-hosted variable font (weights 400-800 in one file), latin + latin-ext.
+   latin-ext is NOT optional: pinyin tone marks (ā ǎ ǖ …) live there, so without
+   it every toned syllable would fall back to Helvetica mid-word.
+   Only the dashboard applies this family (see views/dashboardlayout.pug), and
+   unicode-range keeps Han text off it entirely, so other pages never download it.
+   Same cache-busting rule as the fonts above: bump ?version=N here AND the
+   /style.css?version=N in views/dashboardlayout.pug when the bytes change. */
+@font-face {
+	font-family: 'Nunito';
+	font-style: normal;
+	font-weight: 400 800;
+	font-display: swap;
+	src: url('/fonts/nunito-latin.woff2?version=1') format('woff2');
+	unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+	font-family: 'Nunito';
+	font-style: normal;
+	font-weight: 400 800;
+	font-display: swap;
+	src: url('/fonts/nunito-latin-ext.woff2?version=1') format('woff2');
+	unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+/* === Reset (replaces Bootstrap 2 normalize) === */
+/**, *::before, *::after {
+	box-sizing: border-box;
+}*/
+
+html {
+	font-size: 100%;
+	-webkit-text-size-adjust: 100%;
+}
+
+body {
+	margin: 0;
+	font-family: 'HanziRare', "Helvetica Neue", Helvetica, Arial, sans-serif;
+	line-height: 1.2;
+	color: #333;
+}
+
+a {
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+img {
+	max-width: 100%;
+	height: auto;
+	vertical-align: middle;
+	border: 0;
+}
+
+button, input, select, textarea {
+	margin: 0;
+	font-family: inherit;
+	font-size: 100%;
+	vertical-align: middle;
+}
+
+/* === Layout grid (replaces Bootstrap 2 grid) === */
+.container {
+	max-width: 1170px;
+	margin-left: auto;
+	margin-right: auto;
+	padding-left: 20px;
+	padding-right: 20px;
+}
+
+.row {
+	display: flex;
+	flex-wrap: wrap;
+}
+
+.row::after {
+	content: "";
+	display: table;
+	clear: both;
+}
+
+.span1  { flex: 0 0 8.333%;  max-width: 8.333%;  }
+.span2  { flex: 0 0 16.667%; max-width: 16.667%; }
+.span3  { flex: 0 0 25%;     max-width: 25%;     }
+.span4  { flex: 0 0 33.333%; max-width: 33.333%; }
+.span5  { flex: 0 0 41.667%; max-width: 41.667%; }
+.span6  { flex: 0 0 50%;     max-width: 50%;     }
+.span7  { flex: 0 0 58.333%; max-width: 58.333%; }
+.span8  { flex: 0 0 66.667%; max-width: 66.667%; }
+.span9  { flex: 0 0 75%;     max-width: 75%;     }
+.span10 { flex: 0 0 83.333%; max-width: 83.333%; }
+.span11 { flex: 0 0 91.667%; max-width: 91.667%; }
+.span12 { flex: 0 0 100%;    max-width: 100%;    }
+
+.offset1 { margin-left: 8.333%;  }
+.offset2 { margin-left: 16.667%; }
+.offset3 { margin-left: 25%;     }
+
+/* Nested span10 = full width of parent (Bootstrap 2 used fixed pixels so nesting didn't shrink) */
+[class*="span"] .span10 {
+	flex: 0 0 100%;
+	max-width: 100%;
+}
+
+@media (max-width: 767px) {
+	.row {
+		flex-direction: column;
+	}
+	[class*="span"] {
+		flex: 0 0 100%;
+		max-width: 100%;
+	}
+	[class*="offset"] {
+		margin-left: 0;
+	}
+}
+
+/* === Button base (replaces Bootstrap .btn) === */
+.btn {
+	display: inline-block;
+	padding: 4px 12px;
+	margin-bottom: 0;
+	font-size: 14px;
+	line-height: 20px;
+	text-align: center;
+	vertical-align: middle;
+	cursor: pointer;
+	background-color: #f5f5f5;
+	border: 1px solid #ccc;
+	border-radius: 4px;
+	color: #333;
+	text-decoration: none;
+}
+
+.btn:hover {
+	background-color: #e6e6e6;
+	text-decoration: none;
+}
+
+/* === Alert (replaces Bootstrap .alert) === */
+.alert {
+	padding: 8px 14px;
+	margin-bottom: 10px;
+	background-color: #fcf8e3;
+	border: 1px solid #fbeed5;
+	border-radius: 4px;
+	color: #c09853;
+}
+
+.alert-error {
+	background-color: #f2dede;
+	border-color: #eed3d7;
+	color: #b94a48;
+}
+
+/* === Table (replaces Bootstrap .table) === */
+.table {
+	width: 100%;
+	border-collapse: collapse;
+	margin-bottom: 20px;
+}
+
+.table th,
+.table td {
+	padding: 8px;
+	text-align: left;
+	border-top: 1px solid #ddd;
+}
+
+.table thead th {
+	vertical-align: bottom;
+	border-bottom: 2px solid #ddd;
+}
+
+.table tbody tr:hover td {
+	background-color: #f5f5f5;
+}
+
+/* === Site styles === */
+
+body{
+	background-color: #fefefe;
+	font-size: 14px;
+}
+
+#display{
+	padding: 10px;
+	border: 1px solid #ccc;
+	background-color: white;
+	font-size: 18pt;
+	margin-bottom: 10px;
+	position: relative;
+}
+
+.border{
+	-moz-border-radius: 5px;
+	border-radius: 5px;
+	-webkit-border-radius: 5px;
+	-khtml-border-radius: 5px;
+	box-shadow: 0.07em 0.07em 0.07em #eee;
+}
+.login{
+	border: 1px solid #ccc;
+	padding: 10px;
+}
+.removefav{
+	height: 25px;
+	margin-right: 5px;
+	line-height: 15px;
+	background-color: #fefefe;
+	border-style: none;
+	color: #aaa;
+}
+
+/* Dashboard-only tip under the Decomposition heading. The hover vs tap wording is
+   toggled by media query (not JS) so it renders correctly server-side. */
+.decomp-tip{
+	display: flex;
+	align-items: baseline;
+	gap: 6px;
+	margin: 0 0 8px;
+	font-size: 12px;
+	color: #6b7280;
+}
+.decomp-tip .fa-circle-info{
+	color: #9ca3af;
+	font-size: 11px;
+}
+.decomp-tip-tap{ display: none; }
+@media (max-width: 767px){
+	.decomp-tip-hover{ display: none; }
+	.decomp-tip-tap{ display: inline; }
+}
+
+.decomp-section{
+	display: flex;
+	flex-direction: column;
+	gap: 0;
+	border: 1px solid #e5e7eb;
+	border-radius: 8px;
+	clear: both;
+	margin-top: 10px;
+}
+
+.decomp-row{
+	display: flex;
+	align-items: center;
+	border-bottom: 1px solid #e5e7eb;
+}
+
+.decomp-row:last-child{
+	border-bottom: none;
+}
+
+.decomptitle{
+	width: 130px;
+	min-width: 130px;
+	padding: 10px 8px;
+	font-size: 0.9em;
+	font-weight: 500;
+	color: #374151;
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	border-right: 1px solid #e5e7eb;
+}
+
+.decomp-level{
+	color: #111827;
+	font-size: 0.85em;
+	font-weight: 600;
+	flex-shrink: 0;
+}
+
+.decomp-label{
+	display: inline-flex;
+	align-items: center;
+	white-space: nowrap;
+}
+
+.decompbox{
+	display: flex;
+	align-items: center;
+	padding: 14px 14px;
+	flex: 1;
+	min-width: 0;
+	gap: 10px;
+	flex-wrap: wrap;
+}
+
+/* Source char boxed to match the Breakdown tree's root box (.dtree-box-root) so
+   all three rows share one glyph/box size. */
+.decomp-source{
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	box-sizing: border-box;
+	min-width: 40px;
+	height: 42px;
+	padding: 0 6px;
+	background: #fff;
+	border: 1px solid #e5e7eb;
+	border-radius: 8px;
+	font-size: 1.05em;
+	line-height: 1;
+	font-weight: 500;
+	color: #111827;
+	flex-shrink: 0;
+}
+
+.decomp-arrow{
+	color: #9ca3af;
+	font-size: 1.2em;
+	flex-shrink: 0;
+}
+
+.decomp-components{
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px;
+	align-items: center;
+}
+
+.decomp-tile{
+	display: inline-flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	background: #f9fafb;
+	border: 1px solid #f0f0f0;
+	border-radius: 8px;
+	padding: 4px 6px;
+	min-width: 40px;
+	min-height: 42px;
+	text-align: center;
+	transition: background 0.15s ease, border-color 0.15s ease;
+	box-sizing: border-box;
+}
+
+.decomp-tile:hover{
+	background: #f3f4f6;
+	border-color: #e5e7eb;
+}
+
+.decomp-tile-link,
+.decomp-tile-link:hover{
+	text-decoration: none;
+	cursor: pointer;
+}
+
+.decomp-tile-link .decomp-tile-char{
+	color: #b83746;
+}
+
+.decomp-tile a{
+	font-size: 1.05em;
+	text-decoration: none;
+	color: #b83746;
+}
+
+.decomp-tile a:hover{
+	color: #8c2a35;
+}
+
+.decomp-tile-char{
+	font-size: 1.05em;
+	line-height: 1;
+	color: #111827;
+}
+
+.decomp-tile-meaning{
+	font-size: 0.7em;
+	color: #6b7280;
+	margin-top: 1px;
+	text-align: center;
+	word-wrap: break-word;
+}
+
+/* Placeholder shown when a component has no radical meaning mapped; lighter and
+   italic so it reads as "none available" rather than an actual gloss. */
+.decomp-tile-meaning-na{
+	color: #9ca3af;
+	font-style: italic;
+}
+
+.decomp-tile-noglyph{
+	flex-direction: row;
+	min-width: 0;
+	padding: 6px 12px;
+	background: #f9fafb;
+	cursor: default;
+}
+
+.decomp-tile-noglyph:hover{
+	background: #f9fafb;
+	border-color: #f0f0f0;
+}
+
+/* Decomposition tree (Level 1 "Breakdown"): horizontal tree whose leaves are
+   radicals. Connector lines are drawn with CSS pseudo-elements. */
+.dtree{
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	align-items: center;
+	padding: 16px 14px;
+	/* Deep trees can outgrow the content column, so scroll horizontally rather
+	   than pushing the page wider. ("No glyph" tooltips escape this scroll box
+	   via `position: fixed` — see noGlyph.js — so they aren't clipped by it.) */
+	overflow-x: auto;
+	-webkit-overflow-scrolling: touch;
+}
+
+/* Study Mode stacks the tree in its own row; shrink it to the tree's width and
+   auto-center it (falling back to a horizontal scroll only when the tree is
+   wider than the card). */
+.study-breakdown .dtree{
+	width: fit-content;
+	max-width: 100%;
+	margin: 0 auto;
+}
+
+.dtree-node{
+	display: flex;
+	align-items: center;
+}
+
+.dtree-box{
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	box-sizing: border-box;
+	min-width: 40px;
+	height: 42px;
+	padding: 0 6px;
+	background: #f9fafb;
+	border: 1px solid #eceef1;
+	border-radius: 8px;
+	font-size: 1.05em;
+	line-height: 1;
+	color: #b83746;
+	flex-shrink: 0;
+}
+
+.dtree-box-root{
+	color: #111827;
+	background: #fff;
+	border-color: #e5e7eb;
+}
+
+.dtree-box-link{
+	text-decoration: none;
+	color: #b83746;
+	transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.dtree-box-link:hover{
+	background: #f3f4f6;
+	border-color: #e5e7eb;
+	color: #8c2a35;
+}
+
+.dtree-box-noglyph{
+	width: auto;
+	min-width: 0;
+	padding: 0 8px;
+	font-size: 0.92em;
+}
+
+/* The "No glyph" chip is the widest tile in the tree; trim its label there to
+   keep deep trees narrow (the Components row keeps the full-size chip). */
+.dtree .noglyph-label{
+	font-size: 13px;
+}
+
+/* "No glyph" chip + info tooltip, shared by the tree and the radical row. */
+.noglyph{
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	white-space: nowrap;
+}
+
+.noglyph-label{
+	color: #9ca3af;
+	font-size: 15px;
+	font-weight: 400;
+}
+
+.noglyph-info{
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 15px;
+	height: 15px;
+	padding: 0;
+	border: none;
+	background: none;
+	color: #9ca3af;
+	font-size: 12px;
+	line-height: 1;
+	cursor: pointer;
+	flex-shrink: 0;
+}
+
+.noglyph-info i{
+	font-size: 12px;
+}
+
+/* Positioned `fixed` from JS (see noGlyph.js / tooltipAnchor.js) so it escapes
+   the breakdown tree's `overflow-x: auto` scroll container instead of clipping.
+   top/left/width are supplied inline; this rule only carries appearance. */
+.noglyph-tooltip{
+	position: fixed;
+	z-index: 40;
+	background: #1f2937;
+	color: #f9fafb;
+	padding: 10px 12px;
+	border-radius: 8px;
+	font-size: 12px;
+	line-height: 1.5;
+	font-weight: 400;
+	text-align: left;
+	white-space: normal;
+	box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+/* Children column, offset from the parent by the connector gutter. The
+   horizontal line joining the parent box to the vertical bus sits in the gutter. */
+.dtree-children{
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	position: relative;
+	margin-left: 16px;
+}
+
+.dtree-children::before{
+	content: '';
+	position: absolute;
+	top: 50%;
+	left: -16px;
+	width: 16px;
+	height: 1px;
+	background: #d1d5db;
+}
+
+/* Each child sits in a row; its left gutter carries the vertical bus (::before)
+   and the horizontal stub (::after) reaching the child's box. */
+.dtree-child{
+	display: flex;
+	align-items: center;
+	position: relative;
+	padding: 4px 0 4px 16px;
+}
+
+.dtree-child::before{
+	content: '';
+	position: absolute;
+	left: 0;
+	top: 0;
+	bottom: 0;
+	border-left: 1px solid #d1d5db;
+}
+
+.dtree-child::after{
+	content: '';
+	position: absolute;
+	left: 0;
+	top: 50%;
+	width: 16px;
+	height: 1px;
+	background: #d1d5db;
+}
+
+/* Trim the vertical bus so it spans only between the first and last child
+   centers; a lone child gets no bus (just a straight connector). */
+.dtree-child:first-child::before{ top: 50%; }
+.dtree-child:last-child::before{ bottom: 50%; }
+.dtree-child:only-child::before{ display: none; }
+
+#addfav{
+	font-size: 0.66em;
+}
+
+.meaning{
+	margin-top: 10px;
+	font-size: 1em;
+}
+
+.meaning-entries{
+	background-color: white;
+	color: #444;
+	padding: 4px 18px;
+	border: 1px solid #eee;
+	border-radius: 5px;
+	line-height: 1.4;
+}
+
+.appearsin{
+	margin-top: 8px;
+	word-wrap:break-word;
+}
+
+.appearsinbox{
+	padding: 8px;
+	border: 1px solid #ccc;
+	border-radius: 5px;
+}
+
+.newsbite{
+	border: 1px solid #e0c6ca;
+	font-size: 0.9em;
+	padding: 2px 14px;
+	background-color: #fdf5f6;
+	border-radius: 20px;
+	white-space: nowrap;
+}
+
+.manychar{
+	height: 100%;
+}
+.decomp{
+	font-size: 0.7em;
+	width: 100%;
+}
+form[name="sumbitchar"] {
+	display: flex;
+	align-items: center;
+	flex-wrap: nowrap;
+}
+#decompose{
+	height: 45px;
+	flex-shrink: 0;
+}
+#header{
+	position: sticky;
+	top: 0;
+	z-index: 1000;
+	background-color: #fefefe;
+	border-bottom: 1px solid #ddd;
+	box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+	margin-bottom: 20px;
+	width: 100%;
+}
+
+.header-inner{
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 8px 20px;
+	flex-wrap: wrap;
+	gap: 4px 0;
+}
+
+.headerleft{
+	display: flex;
+	align-items: center;
+	gap: 24px;
+	flex-shrink: 0;
+}
+
+.header-links{
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.header-nav-row{
+	display: flex;
+	align-items: center;
+	gap: 24px;
+}
+
+/* Chinese Character Lists dropdown */
+.header-dropdown{
+	position: relative;
+}
+.header-dropdown-toggle{
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	font-size: 0.95em;
+	font-weight: 600;
+	color: #b83746;
+	cursor: pointer;
+	white-space: nowrap;
+	padding: 4px 0;
+	outline: none;
+}
+.header-dropdown-caret{
+	font-size: 0.7em;
+	transition: transform 0.15s ease;
+}
+.header-toplink{
+	font-size: 0.95em;
+	font-weight: 600;
+	color: #b83746;
+	white-space: nowrap;
+	padding: 4px 0;
+}
+.header-dropdown:hover .header-dropdown-caret,
+.header-dropdown:focus-within .header-dropdown-caret{
+	transform: rotate(180deg);
+}
+.header-dropdown-menu{
+	display: none;
+	position: absolute;
+	top: 100%;
+	left: 0;
+	flex-direction: column;
+	min-width: 220px;
+	padding: 6px 0;
+	background: #fff;
+	border: 1px solid #ddd;
+	border-radius: 6px;
+	box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+	z-index: 1100;
+}
+.header-dropdown:hover .header-dropdown-menu,
+.header-dropdown:focus-within .header-dropdown-menu{
+	display: flex;
+}
+.header-dropdown-menu .header-link{
+	padding: 9px 16px;
+	white-space: nowrap;
+}
+.header-dropdown-menu .header-link:hover{
+	background: #f6f6f6;
+}
+
+.header-dot{
+	color: #aaa;
+}
+
+.header-link{
+	font-size: 0.9em;
+	white-space: nowrap;
+}
+
+.headerclear{
+	display: none;
+}
+
+#header > .clear{
+	display: none;
+}
+
+
+#about p{
+	margin-left: 15px;
+	font-size: 1.1em;
+}
+
+#buytext p{
+	font-size: 1.1em;
+}
+.links{
+	font-size: 1em;
+	text-align: right;
+	white-space: nowrap;
+	margin-left: auto;
+	flex-shrink: 0;
+}
+
+.title{
+	flex-shrink: 0;
+}
+
+.title .logo {
+	padding: 0;
+	margin: 0;
+	font-size: 2.5em;
+	font-weight: bold;
+}
+.examples {
+	margin-top: 10px;
+	display: flex;
+	flex-wrap: wrap;
+	gap: 4px;
+}
+.entry{
+	border-bottom: 1px dotted #888;
+	margin-bottom: 8px;
+	padding-bottom: 8px;
+}
+
+ol li{
+	font-size: 1em;
+	padding: 3px;
+}
+
+ul li{
+	font-size: 1em;
+	padding: 3px;
+	list-style-type:square
+}
+
+li.list{
+	display: inline-block;
+}
+
+h1{
+	color: #b83746;
+	font-size: 3em;
+	margin-top: 5px;
+}
+h1 a:hover{
+	text-decoration: none;
+}
+h2{
+	margin: 0px;
+}
+h3{
+	color: #b83746;
+	margin: 0px;
+	line-height: 1em;
+	font-size: 1.2em;
+	margin-bottom: 5px;
+}
+p{
+	font-size: 1.2em;
+}
+#buy p{
+	font-size: 0.8em;
+}
+
+.list_head{
+	height: 75px;
+	width: 70px;
+	border: 1px solid #aaa;
+	font-size: 1.1em;
+	background-color: white;
+	padding: 8px;
+	line-height: 2.5em;
+	text-align: center;
+	float: left;
+}
+
+.list_details{
+	line-height: 1.3em;
+	font-size: 1.1em;
+	height: 75px;
+	width: 120px;
+	border: 1px solid #aaa;
+	padding: 8px;
+	float: left;
+	margin-right: 2px;
+}
+
+/* Defer layout/paint of off-screen phonetic-set items (same LCP win as the
+   frequency list). Each item is a floated head + details block (~95px tall);
+   the intrinsic size reserves a placeholder until it scrolls into view. */
+#phoneticsets .list {
+	content-visibility: auto;
+	contain-intrinsic-size: auto 95px;
+}
+.printable-cta {
+	text-align: center;
+	cursor: pointer;
+}
+.printable-cta img{
+	width: 50%;
+	border-radius: 5px;
+}
+
+.bigchar{
+	/*border-radius: 3px;
+	width: 130px;
+	border: 1px solid #aaa;
+	font-size: 3em;
+	background-color: white;
+	padding: 9px;
+	text-align: center;
+	margin-bottom: 5px;
+	line-height: 1em;
+	display: inline-block;*/
+	
+	border-radius: 8px;
+    /* width: 130px; */
+    color: black;
+    border: 2px dashed #cecece;
+    font-size: 3.5em;
+    background-color: white;
+    padding: 9px;
+    text-align: center;
+    margin-bottom: 10px;
+    line-height: 1em;
+    display: inline-block;
+    padding: 28px 18px;
+    box-shadow: 0px 2px 1px #eee;
+}
+
+.mobile-banner {
+	width: 280px; 
+	/*width:;*/
+	right: 0px;
+	top: -12px;
+	position: absolute;
+}
+
+.character-nav {
+	font-size: 0.8em;
+}
+
+.next-char {
+	margin-left: 22px;
+}
+
+a{
+	color: #b83746;
+}
+.dashboard{
+	height: 100%;
+	
+}
+#favorites{
+	width: 105%;
+}
+#history{
+	width: 105%;
+}
+.smallest-font {
+	font-size: 0.6em;
+}
+.smaller-font {
+	font-size: 0.8em;
+}
+.favblock{
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 8px;
+}
+.examples h3,
+.examples h4{
+	width: 100%;
+	margin: 8px 8px 8px 0px;
+}
+.examples .clear{
+	display: none;
+}
+.wordblock{
+	width: 151px;
+	margin: 2px;
+	border: 1px solid #ccc;
+	position: relative;
+	border-radius: 8px;
+	padding: 4px 8px;
+}
+
+.favblockdash{
+	padding: 3px;
+	width: 145px;
+	float: left;
+	margin: 2px;
+	border: 1px solid #ccc;
+}
+
+.hidden {
+	display: none;
+}
+
+#input{
+	/*font-family: chinchar;*/
+	height: 40px;
+	font-size: 16pt;
+	border: 1px solid #ccc;
+	display: inline-block;
+	border-radius: 5px;
+	padding: 2px 10px;
+	width: 270px;
+	min-width: 0;
+}
+
+#info{
+	padding: 10px;
+	border: 1px solid #ccc;
+	background-color: white;
+	font-size: 1.1em;
+	margin-top: 10px;
+	margin-bottom: 10px;
+}
+
+#characterDisplay{
+	float: left;
+	font-size: 35pt;
+	line-height: 215px;
+	padding-left: 50px;
+}
+#footer{
+	color: #aaa;
+	font-size: 0.8em;
+	float: right;
+}
+li{
+	font-size: 10pt;
+}
+.left{
+	float: left;
+}
+.right{
+	float:right;
+}
+
+.clear {
+	clear: both;
+}
+
+.curve{
+	-moz-border-radius: 5px;
+	border-radius: 5px;
+	-webkit-border-radius: 5px;
+	-khtml-border-radius: 5px;
+}
+
+.description{
+	background-color: white;
+	font-size: 11pt;
+	border: 1px solid #ccc;
+	padding: 10px;
+	width: 95%;
+	-moz-border-radius: 5px;
+	border-radius: 5px;
+	-webkit-border-radius: 5px;
+	-khtml-border-radius: 5px;
+	margin-bottom: 10px;
+}
+
+.popup{
+	display: none;
+	position: absolute;
+	background-color: white;
+	color: #444;
+	padding: 8px;
+	border: 1px solid #b83746;
+	box-shadow: 0 0.09em 0.05em #b83746;
+	-moz-border-radius: 5px;
+	border-radius: 5px;
+	-webkit-border-radius: 5px;
+	-khtml-border-radius: 5px;
+}
+
+.popup-new{
+	position: absolute;
+	background-color: white;
+	color: #444;
+	padding: 10px 12px;
+	border: 1px solid #b83746;
+	box-shadow: 0 2px 8px rgba(184, 55, 70, 0.15);
+	border-radius: 5px;
+	top: 30px;
+	z-index: 10;
+	width: 200%;
+	word-wrap: break-word;
+	font-size: 13px;
+	line-height: 1.4;
+}
+.popup-entry{
+	padding: 4px 0;
+}
+.popup-entry + .popup-entry{
+	border-top: 1px solid #eee;
+}
+.popup-pinyin{
+	display: block;
+	font-weight: 600;
+	color: #b83746;
+	margin-bottom: 2px;
+}
+.popup-pinyin-numbered{
+	font-weight: 400;
+	color: #999;
+	font-size: 12px;
+}
+.popup-definition{
+	display: block;
+	color: #444;
+}
+
+.word-mobile-overlay{
+	display: none;
+}
+
+@media(max-width: 767px){
+	.word-mobile-overlay{
+		display: block;
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		background: rgba(0,0,0,0.4);
+		z-index: 1000;
+	}
+	.word-mobile-menu{
+		position: fixed;
+		top: 50%;
+		left: 50%;
+		transform: translate(-50%, -50%);
+		width: 90%;
+		max-width: 400px;
+		background: white;
+		border-radius: 14px;
+		padding: 20px;
+		max-height: 70vh;
+		overflow-y: auto;
+		z-index: 1001;
+	}
+	.word-mobile-header{
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 12px;
+	}
+	.word-mobile-chars{
+		font-size: 24px;
+		color: #b83746;
+	}
+	.word-mobile-close{
+		font-size: 28px;
+		color: #999;
+		cursor: pointer;
+		padding: 0 4px;
+		line-height: 1;
+	}
+	.word-mobile-defs{
+		margin-bottom: 16px;
+	}
+	.word-mobile-def-entry{
+		padding: 8px 0;
+		border-bottom: 1px solid #eee;
+	}
+	.word-mobile-def-entry:last-child{
+		border-bottom: none;
+	}
+	.word-mobile-lookup{
+		display: block;
+		text-align: center;
+		padding: 12px;
+		background: #f3f4f6;
+		border-radius: 8px;
+		color: #b83746;
+		font-weight: 600;
+		text-decoration: none;
+		font-size: 15px;
+	}
+}
+
+.mandarin{
+	position: relative;
+	float: right;
+	margin-bottom: -45px;
+	top: -30px;
+}
+
+.submit-btn {
+	margin-left: 5px;
+}
+
+.metainfo li{
+	list-style-type: square;
+}
+
+.justify {
+	text-align: justify;
+}
+
+.emoji-newsbite {
+	font-size: 1.5em;
+	line-height: 1em;
+	position: relative;
+    top: 3px;
+}
+.chinese-character-list {
+	list-style-type: square;
+}
+
+/* Lists Page Modern Design */
+.lists-page {
+	max-width: 800px;
+	margin: 0 auto;
+}
+
+.lists-header {
+	text-align: center;
+	margin-bottom: 40px;
+}
+
+.lists-header h2 {
+	color: #b83746;
+	font-size: 2em;
+	margin-bottom: 16px;
+}
+
+.lists-intro {
+	font-size: 1.1em;
+	color: #555;
+	max-width: 600px;
+	margin: 0 auto 12px auto;
+}
+
+.lists-contact {
+	font-size: 0.95em;
+	color: #888;
+}
+
+.lists-grid {
+	display: flex;
+	flex-direction: column;
+	gap: 16px;
+}
+
+.lists-grid-2x2 {
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	gap: 16px;
+}
+
+.lists-page .list-card {
+	display: flex;
+	align-items: center;
+	padding: 24px;
+	background: #fff;
+	border: 1px solid #e0e0e0;
+	border-radius: 12px;
+	text-decoration: none;
+	color: inherit;
+	transition: all 0.2s ease;
+	box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+}
+
+.lists-page .list-card:hover {
+	border-color: #b83746;
+	box-shadow: 0 4px 12px rgba(184,55,70,0.12);
+	transform: translateY(-2px);
+	text-decoration: none;
+	color: inherit;
+}
+
+.lists-page .list-card-disabled {
+	opacity: 0.7;
+	cursor: default;
+	background: #fafafa;
+}
+
+.lists-page .list-card-disabled:hover {
+	border-color: #e0e0e0;
+	box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+	transform: none;
+}
+
+.lists-page .list-card-cta {
+	background: linear-gradient(135deg, #fff5f6 0%, #fff 100%);
+	border-color: #b83746;
+	border-width: 2px;
+}
+
+.lists-page .list-card-cta:hover {
+	background: linear-gradient(135deg, #ffebee 0%, #fff 100%);
+}
+
+.list-card-icon {
+	font-size: 2.5em;
+	margin-right: 20px;
+	flex-shrink: 0;
+	width: 60px;
+	text-align: center;
+}
+
+.list-card-content {
+	flex: 1;
+}
+
+.lists-page .list-card-content h3 {
+	color: #333;
+	font-size: 1.25em;
+	margin: 0 0 8px 0;
+	line-height: 1.3;
+}
+
+.lists-page .list-card:hover .list-card-content h3 {
+	color: #b83746;
+}
+
+.lists-page .list-card-content p {
+	color: #666;
+	font-size: 0.95em;
+	margin: 0;
+	line-height: 1.5;
+}
+
+.list-card-badge {
+	display: inline-block;
+	background: #f0f0f0;
+	color: #888;
+	font-size: 0.75em;
+	padding: 3px 10px;
+	border-radius: 12px;
+	margin-left: 8px;
+	vertical-align: middle;
+	position: relative;
+	top: -2px;
+}
+
+.list-card-arrow {
+	font-size: 1.5em;
+	color: #ccc;
+	margin-left: 16px;
+	flex-shrink: 0;
+	transition: all 0.2s ease;
+}
+
+.lists-page .list-card:hover .list-card-arrow {
+	color: #b83746;
+	transform: translateX(4px);
+}
+
+.lists-cta {
+	color: #888;
+	font-size: 0.95em;
+}
+
+.lists-cta a {
+	color: #b83746;
+	font-weight: 600;
+}
+
+.lists-section-title {
+	color: #333;
+	font-size: 1.4em;
+	margin: 36px 0 4px 0;
+}
+
+.lists-section-desc {
+	color: #888;
+	font-size: 0.95em;
+	margin: 0 0 16px 0;
+}
+
+.hsk-grid {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 12px;
+}
+
+.hsk-card {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	padding: 20px 12px;
+	background: #fff;
+	border: 1px solid #e0e0e0;
+	border-radius: 10px;
+	text-decoration: none;
+	color: inherit;
+	transition: all 0.2s ease;
+	box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+}
+
+.hsk-card:hover {
+	border-color: #b83746;
+	box-shadow: 0 4px 12px rgba(184,55,70,0.12);
+	transform: translateY(-2px);
+	text-decoration: none;
+	color: inherit;
+}
+
+.hsk-level {
+	font-size: 1.15em;
+	font-weight: 700;
+	color: #333;
+}
+
+.hsk-card:hover .hsk-level {
+	color: #b83746;
+}
+
+.hsk-desc {
+	font-size: 0.85em;
+	color: #888;
+	margin-top: 4px;
+}
+
+@media (max-width: 600px) {
+	.lists-header h2 {
+		font-size: 1.6em;
+	}
+
+	.lists-page .list-card {
+		padding: 16px;
+	}
+
+	.list-card-icon {
+		font-size: 2em;
+		width: 45px;
+		margin-right: 14px;
+	}
+
+	.lists-page .list-card-content h3 {
+		font-size: 1.1em;
+	}
+
+	.lists-page .list-card-content p {
+		font-size: 0.9em;
+	}
+
+	.list-card-arrow {
+		display: none;
+	}
+
+	.lists-grid-2x2 {
+		grid-template-columns: 1fr;
+	}
+
+	.hsk-grid {
+		grid-template-columns: repeat(2, 1fr);
+	}
+}
+
+.frequency-list .list {
+	border: 1px solid #eee;
+	width: 48px;
+	text-align: center;
+	/* Skip layout/paint of the ~9000 off-screen list items until they scroll
+	   near the viewport — keeps initial render (and LCP) cheap. The intrinsic
+	   size reserves a placeholder so scroll height stays accurate. Degrades
+	   gracefully: unsupported browsers render the full list as before. */
+	content-visibility: auto;
+	contain-intrinsic-size: auto 50px;
+}
+
+.frequency-list .list.list-component {
+	width: 70px;
+}
+
+.frequency-list .list a {
+	font-size: 1.2em;
+}
+
+.frequency-list .list span {
+	display: block;
+}
+
+.input-char-form {
+	margin: 0px;
+}
+
+.character-tabs ol {
+	margin: 0px;
+	list-style: none;
+	margin-top: 16px;
+	padding: 0px;
+}
+
+.character-tabs ol li {
+	border: 1px solid #ccc;
+    width: 19px;
+    font-size: 1.2em;
+    padding: 16px 8px;
+    border-radius: 3px 3px 0px 0px;
+    position: relative;
+    top: 4px;
+    display: inline-block;
+}
+
+.top-anchor {
+	position: relative;
+    top: -40px;
+    font-size: 0.7em;
+}
+
+.mobile-cta {
+	border: 1px solid #c62742;
+	border-radius: 3px;
+	float: right;
+	width: 300px;
+}
+
+@media(max-width: 1200px){
+	.title .logo {
+		font-size: 2.5em;
+	}
+}
+@media(max-width: 979px){
+	.mandarin{
+		float: left;
+		position: initial;
+		top: 0px;
+		margin-bottom: 0;
+	}
+
+	.mobile-banner {
+		position: relative;
+		margin-bottom: 5px;
+	}
+}
+
+@media(max-width: 767px){
+	.mandarin{
+		float: left;
+		position: initial;
+		top: 0px;
+		margin-bottom: 0;
+	}
+
+	.mobile-banner {
+		position: absolute;
+		margin-bottom: 0px;
+	}
+}
+
+@media(max-width: 710px){
+	.mobile-banner {
+		position: relative;
+		margin-bottom: 5px;
+	}
+}
+
+
+@media(max-width: 654px){
+	.mandarin{
+		float: left;
+		position: initial;
+		top: 0px;
+		margin-bottom: 0;
+	}
+}
+
+@media(max-width: 767px){
+	#header{
+		position: static;
+	}
+	.header-inner{
+		padding: 8px 12px;
+		flex-wrap: nowrap;
+	}
+	.headerleft{
+		flex-direction: column;
+		align-items: flex-start;
+		flex-shrink: 1;
+		gap: 2px;
+		min-width: 0;
+	}
+	.header-nav-row{
+		gap: 0px 8px;
+		flex-wrap: wrap;
+		min-width: 0;
+	}
+	.header-dropdown-toggle{
+		font-size: 0.85em;
+	}
+	.header-toplink{
+		font-size: 0.85em;
+	}
+	.signup-link{
+		display: none;
+	}
+	.title .logo {
+		font-size: 1.5em;
+	}
+	.links{
+		font-size: 0.9em;
+		align-self: flex-start;
+	}
+	.character-actions{
+		flex-direction: column !important;
+		align-items: flex-end !important;
+		gap: 6px;
+	}
+	.status-selector{
+		margin-right: 0 !important;
+	}
+}
+
+@media(max-width: 550px){
+	.newsbite {
+		/*overflow: hidden;
+		text-overflow: ellipsis;*/
+		font-size: 0.75em;
+	    padding: 2px 8px;
+	}
+	.headerleft {
+		flex-wrap: nowrap;
+		min-width: 0;
+	}
+}
+
+@media (max-width: 480px){
+	.title .logo {
+		font-size: 1.2em;
+	}
+	h1{
+		font-size: 2em;
+		margin-top: 0px;
+		margin-bottom: -5px;
+	}
+	h3{
+		font-size: 1.2em;
+		margin: 0px;
+		padding: 0px;
+		line-height: 1.2em;
+	}
+
+	.decomp-row{
+		flex-direction: column;
+		align-items: stretch;
+	}
+	.decomptitle{
+		width: auto;
+		min-width: auto;
+		border-right: none;
+		border-bottom: 1px solid #e5e7eb;
+		padding: 8px 12px;
+	}
+	.decompbox{
+		padding: 16px 10px;
+	}
+	.decomp-source{
+		font-size: 1.05em;
+	}
+	.decomp{
+		display: inline-block;
+		font-size: 0.65em;
+	}
+
+	.links{
+		font-size: 1em;
+	}
+}
+
+@media(max-width: 450px){ 
+	.mobile-banner {
+		width: 100%;
+	}
+	.header-link {
+		font-size: 0.8em;
+	}
+}
+
+@media(max-width: 480px) {
+	#input {
+		width: auto;
+		flex: 1 1 0;
+	}
+}
+
+/* Progress-bar signup CTA. Shared by the frequency list (list_frequency.pug)
+   and the character-page A/B test (public/js/character/components/app.js). */
+.freq-cta-progress {
+	display: flex;
+	align-items: center;
+	gap: 20px;
+	background: linear-gradient(135deg, #fff5f6 0%, #fff 100%);
+	border: 2px solid #b83746;
+	border-radius: 12px;
+	padding: 20px 24px;
+	margin: 24px 0;
+}
+.freq-cta-progress-chars {
+	display: flex;
+	gap: 6px;
+	flex-shrink: 0;
+}
+.freq-cta-progress-char {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 44px;
+	height: 44px;
+	font-size: 28px;
+	color: #111827;
+	background: #f0fdf4;
+	border: 1px solid #bbf7d0;
+	border-radius: 8px;
+	text-decoration: none;
+	transition: transform 0.15s;
+}
+.freq-cta-progress-char:hover {
+	transform: translateY(-2px);
+	text-decoration: none;
+	color: #111827;
+}
+.freq-cta-progress-info {
+	flex: 1;
+	min-width: 0;
+}
+.freq-cta-progress-bar {
+	position: relative;
+	height: 18px;
+	background: #f3f4f6;
+	border-radius: 9px;
+	overflow: hidden;
+	margin-bottom: 8px;
+}
+.freq-cta-progress-bar-fill {
+	height: 100%;
+	background: linear-gradient(90deg, #16a34a 0%, #22c55e 100%);
+	border-radius: 9px;
+	transition: width 0.8s ease-out;
+}
+.freq-cta-progress-bar-label {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 11px;
+	font-weight: 600;
+	color: #111827;
+}
+.freq-cta-progress-info p {
+	font-size: 13px;
+	color: #6b7280;
+	margin: 0;
+	line-height: 1.4;
+}
+.freq-cta-progress-button {
+	flex-shrink: 0;
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	background: #b83746;
+	color: #fff;
+	font-size: 14px;
+	font-weight: 600;
+	padding: 12px 18px;
+	border-radius: 8px;
+	text-decoration: none;
+	transition: all 0.2s;
+}
+.freq-cta-progress-button:hover {
+	background: #9d2f3b;
+	color: #fff;
+	text-decoration: none;
+	transform: translateX(2px);
+}
+@media (max-width: 600px) {
+	.freq-cta-progress {
+		flex-direction: column;
+		align-items: stretch;
+		padding: 16px;
+		gap: 14px;
+	}
+	.freq-cta-progress-chars {
+		justify-content: space-between;
+	}
+	.freq-cta-progress-char {
+		width: 100%;
+		max-width: 56px;
+		height: 48px;
+		font-size: 26px;
+	}
+	.freq-cta-progress-button {
+		justify-content: center;
+	}
+}

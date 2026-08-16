@@ -1,0 +1,215 @@
+$(document).ready(function(){
+	$("#reset").click(function(){
+		resetPassword();
+	});
+});
+var examplewords = {};
+
+function getWord(word, popup_id){
+	if('undefined' == typeof examplewords[word]){
+		$.get('/api/words/'+word, function(result){
+			examplewords[word] = result[0];
+			showExampleWordPopup(word, popup_id);
+		});
+	}
+	else{
+		showExampleWordPopup(word, popup_id);
+	}
+};
+
+function showExampleWordPopup(word, popup_id){
+	var word_info = examplewords[word];
+	if($("a[href='/character/"+word+"']").is(":hover")){
+		$("#"+popup_id).css('display', 'block');
+		var position = $("#"+popup_id).position();
+		$("#"+popup_id).css('top', position.top+30);
+		$("#"+popup_id).css('left', position.left-5);
+		$("#"+popup_id).html("Pinyin: "+ word_info.pinyin+ "<br>Definition: " + word_info.definition.replace(/\//g, ' • '));
+	}
+};
+
+function hidePopup(popup_id){
+	//Reset
+	$("#"+popup_id).html("");
+	$("#"+popup_id).css('top', 'auto');
+	$("#"+popup_id).css('left', 'auto');
+	$("#"+popup_id).css('display', 'none');
+};
+
+function submitFav(character){
+	$.post('/addfav', {character: character}, function(result){
+		alert(result);
+	});
+}
+
+function resetPassword(){
+	$.post('/forget', {email: $("input[name=email]").val()}, function(result){
+		alert(result);
+	});
+}
+
+function removeFav(character){
+	if (window.confirm('Do you really want to remove '+ character +' from your favorites?')){
+	    $.post('/removefav', {character: character}, function(result){
+	    	alert(result);
+	    	if(result != "An error occured."){
+	    		window.location.href = "/dashboard";
+	    	}
+	    });
+	}
+	else{
+	    // They clicked no
+	}
+}
+
+function createList(){
+	var name = $("#new-list-name").val().trim();
+	if(!name){
+		alert("Please enter a list name.");
+		return;
+	}
+	$.ajax({
+		url: '/api/lists',
+		type: 'POST',
+		contentType: 'application/json',
+		data: JSON.stringify({name: name}),
+		success: function(result){
+			if(result.error){
+				alert(result.error);
+			}
+			else{
+				window.location.href = "/dashboard";
+			}
+		},
+		error: function(xhr){
+			var response = xhr.responseJSON || {};
+			alert(response.error || "An error occurred.");
+		}
+	});
+}
+
+function renameList(listId, currentName){
+	var newName = window.prompt("Enter a new name for the list:", currentName);
+	if(newName === null) return; // User cancelled
+	newName = newName.trim();
+	if(!newName){
+		alert("Please enter a valid list name.");
+		return;
+	}
+	$.ajax({
+		url: '/api/lists/' + listId,
+		type: 'PUT',
+		contentType: 'application/json',
+		data: JSON.stringify({name: newName}),
+		success: function(result){
+			if(result.error){
+				alert(result.error);
+			}
+			else{
+				window.location.href = "/dashboard";
+			}
+		},
+		error: function(xhr){
+			var response = xhr.responseJSON || {};
+			alert(response.error || "An error occurred.");
+		}
+	});
+}
+
+function deleteList(listId, listName){
+	if(!window.confirm('Do you really want to delete the list "' + listName + '"? This will remove all characters in this list.')){
+		return;
+	}
+	$.ajax({
+		url: '/api/lists/' + listId,
+		type: 'DELETE',
+		success: function(result){
+			if(result.error){
+				alert(result.error);
+			}
+			else{
+				window.location.href = "/dashboard";
+			}
+		},
+		error: function(xhr){
+			var response = xhr.responseJSON || {};
+			alert(response.error || "An error occurred.");
+		}
+	});
+}
+
+function removeFromList(listId, character){
+	if(!window.confirm('Do you really want to remove ' + character + ' from this list?')){
+		return;
+	}
+	$.ajax({
+		url: '/api/lists/' + listId + '/characters/' + encodeURIComponent(character),
+		type: 'DELETE',
+		success: function(result){
+			if(result.error){
+				alert(result.error);
+			}
+			else{
+				window.location.href = "/dashboard";
+			}
+		},
+		error: function(xhr){
+			var response = xhr.responseJSON || {};
+			alert(response.error || "An error occurred.");
+		}
+	});
+}
+
+function popupBuy(){
+	if(window.confirm("You need a HanziCraft account to add to favorites. Do you want to sign up?")){
+		window.location.href = "/register?utm_content=favorite-popup";
+	}
+}
+
+// A/B Experiment tracking helpers
+// NOTE: views/characterreact.pug inlines a mirror of this assignment logic so
+// the right CTA variant is visible before paint on Cloudflare-cached pages.
+// If you change the cookie name, allocation rule, or expiry here, update it there too.
+function hcGetVariant(slug){
+	var cookieName = 'hc_exp_' + slug;
+	var match = document.cookie.match(new RegExp('(?:^|; )' + cookieName.replace(/([.$?*|{}()\[\]\\\/+^])/g, '\\$1') + '=([^;]*)'));
+	if(match){
+		return decodeURIComponent(match[1]);
+	}
+	var variant = Math.random() < 0.5 ? 'A' : 'B';
+	var expires = new Date();
+	expires.setDate(expires.getDate() + 90);
+	document.cookie = cookieName + '=' + variant + '; expires=' + expires.toUTCString() + '; path=/';
+	return variant;
+}
+
+window._hcTrackedViews = {};
+
+function hcTrackView(slug){
+	var variant = hcGetVariant(slug);
+	if(!window._hcTrackedViews[slug]){
+		window._hcTrackedViews[slug] = true;
+		$.post('/api/experiments/track/view', {slug: slug, variant: variant});
+	}
+	return variant;
+}
+
+function hcTrackClick(slug){
+	var variant = hcGetVariant(slug);
+	$.post('/api/experiments/track/click', {slug: slug, variant: variant});
+}
+
+function regularityString(scale){
+	switch(scale){
+	case 1:
+	  return "It has the exact same pronunciation as the character.";
+	case 2:
+	  return "It has the same pronunciation as the character, but differs on tone.";
+	case 3:
+		return "It has the same pinyin initial.";
+	case 4:
+		return "It has the same pinyin final.";  
+	default:
+	 	return "none";
+	}
+}

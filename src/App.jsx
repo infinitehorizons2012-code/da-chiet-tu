@@ -2,6 +2,8 @@ import { useState, useEffect, useRef, useMemo } from 'react'
 import HanziWriter from 'hanzi-writer'
 import './index.css'
 
+import researchDataObj from './data/research_data.json'
+
 const mockDatabase = {
   '妈': {
     char: '妈',
@@ -168,7 +170,7 @@ function HanziDisplay({ char, components }) {
   );
 }
 
-function App() {
+function LookupTab() {
   const [searchTerm, setSearchTerm] = useState('')
   const [result, setResult] = useState(mockDatabase['南'])
   const [error, setError] = useState('')
@@ -187,9 +189,7 @@ function App() {
   }
 
   return (
-    <div className="app-container">
-      <Header />
-
+    <div className="tab-content">
       <form className="search-container" onSubmit={handleSearch}>
         <input 
           type="text" 
@@ -256,6 +256,106 @@ function App() {
           </div>
         </div>
       )}
+    </div>
+  )
+}
+
+function ResearchTab() {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedChar, setSelectedChar] = useState(null);
+  const [researchData, setResearchData] = useState([]);
+
+  useEffect(() => {
+    // Dynamic import to avoid bundling huge JSON directly in main chunk if possible, 
+    // but Vite handles standard imports fine. For simplicity, fetch it if it's in public, 
+    // or we can import it statically. We'll import statically at the top.
+  }, []);
+
+  const filteredData = useMemo(() => {
+    if (!searchTerm.trim()) return researchDataObj;
+    const lower = searchTerm.toLowerCase();
+    return researchDataObj.filter(item => {
+      return (item['Chữ Trung Quốc'] && item['Chữ Trung Quốc'].includes(lower)) || 
+             (item['Pinyin_Xie'] && item['Pinyin_Xie'].toLowerCase().includes(lower)) ||
+             (item['Âm Hán Việt_Xie'] && item['Âm Hán Việt_Xie'].toLowerCase().includes(lower))
+    });
+  }, [searchTerm]);
+
+  return (
+    <div className="research-container">
+      <div className="research-sidebar">
+        <div className="research-search">
+          <input 
+            type="text" 
+            placeholder="Tìm chữ, pinyin, âm Hán Việt..." 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        <div className="research-list">
+          {filteredData.slice(0, 500).map((item, idx) => (
+             <div 
+               key={idx} 
+               className={`research-list-item ${selectedChar === item ? 'active' : ''}`}
+               onClick={() => setSelectedChar(item)}
+             >
+               <span className="research-list-char">{item['Chữ Trung Quốc']}</span>
+               <span className="research-list-pinyin">{item['Pinyin_Xie'] || ''}</span>
+             </div>
+          ))}
+          {filteredData.length > 500 && <div className="research-list-more">...và {filteredData.length - 500} chữ khác</div>}
+        </div>
+      </div>
+      <div className="research-detail">
+        {selectedChar ? (
+          <div className="research-detail-content">
+             <div className="detail-header">
+                <div className="detail-header-char">{selectedChar['Chữ Trung Quốc']}</div>
+                <div className="detail-pinyin">{selectedChar['Pinyin_Xie']} - {selectedChar['Âm Hán Việt_Xie']}</div>
+             </div>
+             <div className="detail-grid">
+               {Object.keys(selectedChar).map((key, idx) => {
+                 if (key === 'Chữ Trung Quốc' || key === 'Pinyin_Xie' || key === 'Âm Hán Việt_Xie') return null;
+                 if (!selectedChar[key] || selectedChar[key] === 'nan') return null;
+                 return (
+                   <div className="detail-card" key={idx}>
+                     <div className="detail-card-title">{key}</div>
+                     <div className="detail-card-value">{selectedChar[key]}</div>
+                   </div>
+                 )
+               })}
+             </div>
+          </div>
+        ) : (
+          <div className="research-placeholder">Chọn một chữ Hán trong danh sách để xem chi tiết.</div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function App() {
+  const [activeTab, setActiveTab] = useState('lookup');
+
+  return (
+    <div className="app-container">
+      <Header />
+      <div className="tab-navigation">
+        <button 
+          className={activeTab === 'lookup' ? 'tab-btn active' : 'tab-btn'} 
+          onClick={() => setActiveTab('lookup')}
+        >
+          Tra Cứu Nhanh
+        </button>
+        <button 
+          className={activeTab === 'research' ? 'tab-btn active' : 'tab-btn'} 
+          onClick={() => setActiveTab('research')}
+        >
+          Nghiên Cứu Chi Tiết
+        </button>
+      </div>
+      
+      {activeTab === 'lookup' ? <LookupTab /> : <ResearchTab />}
     </div>
   )
 }

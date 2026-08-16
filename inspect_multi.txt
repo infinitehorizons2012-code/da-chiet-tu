@@ -1,0 +1,11 @@
+Total duplicates: 56
+夭: [('Yểu', 'yāo', 'Chết non'), ('Yểu', 'yāo', 'Chết yểu, chết non')]
+句: [('Cú', 'jù', 'Câu văn'), ('Cú', 'jù', 'Câu văn')]
+二: [('Nhị', 'èr', 'Hai (2)'), ('Nhị', 'èr', 'Hai (2)')]
+匀: [('Quân', 'yún', 'Chia đều, bằng nhau'), ('Quân', 'yún', 'Chia đều, bằng nhau')]
+欠: [('Khiếm', 'qiàn', 'Thiếu sót, còn yếu'), ('Khiếm', 'qiàn', 'Thiếu sót, còn yếu')]
+次: [('Thứ', 'cì', 'Đứng hàng hai (Thứ 2)'), ('Thứ', 'cì', 'Đứng hàng hai (Thứ 2)')]
+吹: [('Xuy', 'chuī', 'Thổi'), ('Xuy', 'chuī', 'Thổi'), ('Xúy', 'chuī', 'Cổ xúy')]
+今: [('Kim', 'jīn', 'Hiện nay, hiện tại'), ('Kim', 'jīn', 'Hiện nay, hiện tại')]
+互: [('Hỗ', 'hù', 'Trao đổi, lẫn nhau'), ('Hỗ', 'hù', 'Trao đổi, lẫn nhau')]
+夫: [('Phu', 'fū', 'Người đàn ông trưởng thành'), ('Phu', 'fū', 'Người đàn ông trưởng thành')]

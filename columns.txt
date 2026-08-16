@@ -1,0 +1,23 @@
+Chữ Trung Quốc
+Link
+Số thứ tự
+9000
+Group
+group2
+Số thứ tự words
+HSK1
+HSK2
+HSK3
+HSK4
+HSK5
+HSK6
+Breakdown
+Components_Hanzicraft
+Appears_In
+Bộ thủ & thành phần_Xie
+Hán Việt_Xie
+Tự nguyên_Xie
+Dễ nhầm & Liên quan_Xie
+STT Chữ Nho Tổng Hợp
+Hạng Tần Suất (Jun Da)
+Tần Suất % (Jun Da)

@@ -1,0 +1,15 @@
+Bộ thủ:
+<div class="flex flex-col space-y-1.5 p-6"><h3 class="font-semibold leading-none tracking-tight">Bộ thủ &amp; thành phần</h3></div>
+
+Hán Việt:
+<div class="flex flex-col space-y-1.5 p-6"><h3 class="font-semibold leading-none tracking-tight">Hán-Việt<!-- -->: nhận</h3></div>
+
+Tự nguyên:
+<div class="flex flex-col space-y-1.5 p-6"><h3 class="font-semibold leading-none tracking-tight">Tự nguyên (nguồn gốc chữ)</h3></div>
+
+Dễ nhầm:
+<div class="flex flex-col space-y-1.5 p-6"><h3 class="font-semibold leading-none tracking-tight">Dễ nhầm &amp; liên quan</h3></div>
+
+Liên quan:
+<div><h3>Chữ liên quan</h3><ul><li><a href="/han-tu/dao-%E5%88%80">刀</a></li><li><a href="/han-tu/phan-%E5%88%86">分</a></li><li><a href="/han-tu/tiep-%E5%88%87">切</a></li><li><a href="/han-tu/biet-%E5%88%AB">别</a></li><li><a href="/han-tu/loi-%E5%88%A9">利</a></li><li><a href="/han-tu/che-%E5%88%B6">制</a></li><li><a href="/han-tu/nhan-%E4%BB%9E">仞</a></li><li><a href="/han-tu/nhan-%E9%9F%A7">韧</a></li></ul></div>
+

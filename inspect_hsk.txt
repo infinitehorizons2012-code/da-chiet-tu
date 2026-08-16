@@ -1,0 +1,8 @@
+Sheets: ['HSK1', 'HSK2', 'HSK3', 'HSK4', 'HSK5', 'HSK6']
+
+Sheet 'HSK1' columns: ['Chữ Trung Quốc', 'STT', 'Link']
+Sheet 'HSK2' columns: ['Chữ Trung Quốc', 'STT', 'Link']
+Sheet 'HSK3' columns: ['Chữ Trung Quốc', 'STT', 'Link']
+Sheet 'HSK4' columns: ['Chữ Trung Quốc', 'STT', 'Link']
+Sheet 'HSK5' columns: ['Chữ Trung Quốc', 'STT', 'Link']
+Sheet 'HSK6' columns: ['Chữ Trung Quốc', 'STT', 'Link']
