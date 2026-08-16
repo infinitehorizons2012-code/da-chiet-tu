@@ -263,13 +263,35 @@ function LookupTab() {
 function ResearchTab() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedChar, setSelectedChar] = useState(null);
-  const [researchData, setResearchData] = useState([]);
+  const [history, setHistory] = useState([]);
 
-  useEffect(() => {
-    // Dynamic import to avoid bundling huge JSON directly in main chunk if possible, 
-    // but Vite handles standard imports fine. For simplicity, fetch it if it's in public, 
-    // or we can import it statically. We'll import statically at the top.
+  const charMap = useMemo(() => {
+    const map = new Map();
+    researchDataObj.forEach(item => {
+      if (item['Chữ Trung Quốc']) map.set(item['Chữ Trung Quốc'], item);
+    });
+    return map;
   }, []);
+
+  const handleSidebarSelect = (charObj) => {
+    setHistory([]);
+    setSelectedChar(charObj);
+  };
+
+  const handleSelectChar = (charObj) => {
+    if (selectedChar) {
+      setHistory(prev => [...prev, selectedChar]);
+    }
+    setSelectedChar(charObj);
+  };
+
+  const handleBack = () => {
+    if (history.length > 0) {
+      const prev = history[history.length - 1];
+      setHistory(prevHistory => prevHistory.slice(0, -1));
+      setSelectedChar(prev);
+    }
+  };
 
   const filteredData = useMemo(() => {
     if (!searchTerm.trim()) return researchDataObj;
@@ -280,6 +302,26 @@ function ResearchTab() {
              (item['Âm Hán Việt_Xie'] && item['Âm Hán Việt_Xie'].toLowerCase().includes(lower))
     });
   }, [searchTerm]);
+
+  const renderClickableValue = (val) => {
+    if (typeof val !== 'string') return val;
+    const cjkRegex = /[\u4e00-\u9fa5]/;
+    const chars = Array.from(val);
+    return chars.map((char, i) => {
+      if (cjkRegex.test(char) && charMap.has(char)) {
+        return (
+          <span 
+            key={i} 
+            className="clickable-char" 
+            onClick={() => handleSelectChar(charMap.get(char))}
+          >
+            {char}
+          </span>
+        );
+      }
+      return char;
+    });
+  };
 
   return (
     <div className="research-container">
@@ -297,7 +339,7 @@ function ResearchTab() {
              <div 
                key={idx} 
                className={`research-list-item ${selectedChar === item ? 'active' : ''}`}
-               onClick={() => setSelectedChar(item)}
+               onClick={() => handleSidebarSelect(item)}
              >
                <span className="research-list-char">{item['Chữ Trung Quốc']}</span>
                <span className="research-list-pinyin">{item['Pinyin_Xie'] || ''}</span>
@@ -309,6 +351,11 @@ function ResearchTab() {
       <div className="research-detail">
         {selectedChar ? (
           <div className="research-detail-content">
+             {history.length > 0 && (
+               <button className="back-btn" onClick={handleBack}>
+                 ← Quay lại
+               </button>
+             )}
              <div className="detail-header">
                 <div className="detail-header-char">{selectedChar['Chữ Trung Quốc']}</div>
                 <div className="detail-pinyin">{selectedChar['Pinyin_Xie']} - {selectedChar['Âm Hán Việt_Xie']}</div>
@@ -320,7 +367,7 @@ function ResearchTab() {
                  return (
                    <div className="detail-card" key={idx}>
                      <div className="detail-card-title">{key}</div>
-                     <div className="detail-card-value">{selectedChar[key]}</div>
+                     <div className="detail-card-value">{renderClickableValue(selectedChar[key])}</div>
                    </div>
                  )
                })}
