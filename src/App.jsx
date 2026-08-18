@@ -6,7 +6,7 @@ let researchDataObj = [];
 
 
 
-function Header() {
+function Header({ primaryTab, setPrimaryTab }) {
   return (
     <header className="app-header">
       <div className="header-left">
@@ -18,16 +18,16 @@ function Header() {
       </div>
       
       <nav className="header-nav">
-        <button className="nav-item active">
+        <button className={`nav-item ${primaryTab === 'tracuu' ? 'active' : ''}`} onClick={() => setPrimaryTab('tracuu')}>
           <span className="nav-icon">🔍</span> Tra cứu
         </button>
-        <button className="nav-item">
+        <button className={`nav-item ${primaryTab === 'tonghop' ? 'active' : ''}`} onClick={() => setPrimaryTab('tonghop')}>
           <span className="nav-icon">📚</span> Tổng hợp
         </button>
-        <button className="nav-item">
+        <button className={`nav-item ${primaryTab === 'luyentap' ? 'active' : ''}`} onClick={() => setPrimaryTab('luyentap')}>
           <span className="nav-icon">📝</span> Luyện tập
         </button>
-        <button className="nav-item">
+        <button className={`nav-item ${primaryTab === 'tracnghiem' ? 'active' : ''}`} onClick={() => setPrimaryTab('tracnghiem')}>
           <span className="nav-icon">🎮</span> Trắc nghiệm
         </button>
       </nav>
@@ -151,6 +151,7 @@ function LookupTab({ globalLookupTerm, setGlobalLookupTerm }) {
           const match = compStr.trim().match(/^([^\s]+)\s+([^\(]+?)\s*\((.+?)\)$/);
           if (match) {
             newResult.components.push({
+              id: `App_Comp_${i}`,
               type: i === 1 ? 'Radical' : 'Component',
               char: match[1],
               hanviet: match[2].trim(),
@@ -164,6 +165,7 @@ function LookupTab({ globalLookupTerm, setGlobalLookupTerm }) {
              const c = parts[0] || '';
              const hv = parts.slice(1).join(' ') || '';
              newResult.components.push({
+              id: `App_Comp_${i}`,
               type: i === 1 ? 'Radical' : 'Component',
               char: c,
               hanviet: hv,
@@ -180,30 +182,40 @@ function LookupTab({ globalLookupTerm, setGlobalLookupTerm }) {
       setResult(newResult);
       setError('');
 
-      // Dynamically fetch stroke counts to color the character
-      try {
-        let currentStrokeIdx = 0;
-        let strokeDataUpdated = false;
-        for (let comp of newResult.components) {
-          if (comp.char) {
-            const res = await fetch(`https://cdn.jsdelivr.net/npm/hanzi-writer-data@2.0/${comp.char}.json`);
-            if (res.ok) {
-              const data = await res.json();
-              const count = data.strokes.length;
-              comp.strokes = Array.from({length: count}, (_, i) => currentStrokeIdx + i);
-              currentStrokeIdx += count;
-              strokeDataUpdated = true;
+      // If quiz_mapping exists, use it!
+      if (researchData.quiz_mapping) {
+        newResult.components.forEach(comp => {
+          if (researchData.quiz_mapping[comp.id]) {
+            comp.strokes = researchData.quiz_mapping[comp.id];
+          }
+        });
+        setResult({ ...newResult });
+      } else {
+        // Fallback: Dynamically fetch stroke counts (flawed for characters with shared strokes)
+        try {
+          let currentStrokeIdx = 0;
+          let strokeDataUpdated = false;
+          for (let comp of newResult.components) {
+            if (comp.char) {
+              const res = await fetch(`https://cdn.jsdelivr.net/npm/hanzi-writer-data@2.0/${comp.char}.json`);
+              if (res.ok) {
+                const data = await res.json();
+                const count = data.strokes.length;
+                comp.strokes = Array.from({length: count}, (_, i) => currentStrokeIdx + i);
+                currentStrokeIdx += count;
+                strokeDataUpdated = true;
+              }
             }
           }
+          if (strokeDataUpdated) {
+            setResult({
+              ...newResult,
+              components: newResult.components.map(c => ({...c}))
+            });
+          }
+        } catch (err) {
+          console.error("Lỗi khi tải dữ liệu nét chữ:", err);
         }
-        if (strokeDataUpdated) {
-          setResult({
-            ...newResult,
-            components: newResult.components.map(c => ({...c}))
-          });
-        }
-      } catch (err) {
-        console.error("Lỗi khi tải dữ liệu nét chữ:", err);
       }
 
     } else {
@@ -499,7 +511,7 @@ function ResearchTab({ setGlobalLookupTerm }) {
 
              <div className="detail-grid">
                {Object.keys(selectedChar).map((key, idx) => {
-                 if (key === 'Chữ Trung Quốc' || key === 'Pinyin_Master (Pinyin Chuẩn Tổng Hợp 100%)' || key === 'Âm Hán Việt (Master 100%)' || key === 'Nghĩa Tiếng Việt (Master 100%)') return null;
+                 if (key === 'Chữ Trung Quốc' || key === 'Pinyin_Master (Pinyin Chuẩn Tổng Hợp 100%)' || key === 'Âm Hán Việt (Master 100%)' || key === 'Nghĩa Tiếng Việt (Master 100%)' || key === 'quiz_mapping') return null;
                  
                  // Lọc theo tab hiện tại
                  if (getTabForKey(key) !== detailTab) return null;
@@ -541,6 +553,7 @@ function ResearchTab({ setGlobalLookupTerm }) {
 }
 
 function App() {
+  const [primaryTab, setPrimaryTab] = useState('tracuu');
   const [activeTab, setActiveTab] = useState('lookup');
   const [dataReady, setDataReady] = useState(false);
   const [globalLookupTerm, setGlobalLookupTerm] = useState('');
@@ -582,31 +595,43 @@ function App() {
 
   return (
     <div className="app-container">
-      <Header />
-      <div className="tab-navigation">
-        <button 
-          className={activeTab === 'lookup' ? 'tab-btn active' : 'tab-btn'} 
-          onClick={() => setActiveTab('lookup')}
-        >
-          Tra Cứu Nhanh
-        </button>
-        <button 
-          className={activeTab === 'research' ? 'tab-btn active' : 'tab-btn'} 
-          onClick={() => setActiveTab('research')}
-        >
-          Nghiên Cứu Chi Tiết
-        </button>
-        <button 
-          className={activeTab === 'chiettu' ? 'tab-btn active' : 'tab-btn'} 
-          onClick={() => setActiveTab('chiettu')}
-        >
-          Chiết Tự (Tô nét)
-        </button>
-      </div>
+      <Header primaryTab={primaryTab} setPrimaryTab={setPrimaryTab} />
       
-      {activeTab === 'lookup' && <LookupTab globalLookupTerm={globalLookupTerm} setGlobalLookupTerm={setGlobalLookupTerm} />}
-      {activeTab === 'research' && <ResearchTab setGlobalLookupTerm={setGlobalLookupTerm} />}
-      {activeTab === 'chiettu' && <ChietTuAdminTab globalLookupTerm={globalLookupTerm} setGlobalLookupTerm={setGlobalLookupTerm} />}
+      {primaryTab === 'tracuu' && (
+        <>
+          <div className="tab-navigation">
+            <button 
+              className={activeTab === 'lookup' ? 'tab-btn active' : 'tab-btn'} 
+              onClick={() => setActiveTab('lookup')}
+            >
+              Tra Cứu Nhanh
+            </button>
+            <button 
+              className={activeTab === 'research' ? 'tab-btn active' : 'tab-btn'} 
+              onClick={() => setActiveTab('research')}
+            >
+              Nghiên Cứu Chi Tiết
+            </button>
+            <button 
+              className={activeTab === 'chiettu' ? 'tab-btn active' : 'tab-btn'} 
+              onClick={() => setActiveTab('chiettu')}
+            >
+              Chiết Tự (Tô nét)
+            </button>
+          </div>
+          
+          {activeTab === 'lookup' && <LookupTab globalLookupTerm={globalLookupTerm} setGlobalLookupTerm={setGlobalLookupTerm} />}
+          {activeTab === 'research' && <ResearchTab setGlobalLookupTerm={setGlobalLookupTerm} />}
+          {activeTab === 'chiettu' && <ChietTuAdminTab globalLookupTerm={globalLookupTerm} setGlobalLookupTerm={setGlobalLookupTerm} />}
+        </>
+      )}
+
+      {primaryTab === 'tonghop' && <TongHopTab />}
+      
+      {primaryTab === 'luyentap' && <LuyenTapTab setPrimaryTab={setPrimaryTab} setActiveTab={setActiveTab} setGlobalLookupTerm={setGlobalLookupTerm} />}
+      
+      {primaryTab === 'tracnghiem' && <TracNghiemTab />}
+      
     </div>
   )
 }
@@ -829,6 +854,179 @@ function ChietTuAdminTab({ globalLookupTerm, setGlobalLookupTerm }) {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function TongHopTab() {
+  const tabs = ['9000', 'HSK1', 'HSK2', 'HSK3', 'HSK4', 'HSK5', 'HSK6', 'Chữ Nho'];
+  const colMap = {
+    '9000': '9000',
+    'HSK1': 'HSK1', 'HSK2': 'HSK2', 'HSK3': 'HSK3', 'HSK4': 'HSK4', 'HSK5': 'HSK5', 'HSK6': 'HSK6',
+    'Chữ Nho': 'ChuNhoTongHop_STT (Giáo trình Chữ Nho)'
+  };
+  const [activeTab, setActiveTab] = useState('HSK1');
+  
+  const filteredData = useMemo(() => {
+    const col = colMap[activeTab];
+    return researchDataObj.filter(item => {
+      const val = item[col];
+      return val !== undefined && val !== '' && val !== 'nan' && val !== null;
+    }).sort((a, b) => {
+      const vA = parseFloat(a[col]);
+      const vB = parseFloat(b[col]);
+      return (isNaN(vA) ? 0 : vA) - (isNaN(vB) ? 0 : vB);
+    });
+  }, [activeTab]);
+
+  const handleAddToPractice = async (charObj) => {
+    const char = charObj['Chữ Trung Quốc'];
+    if (charObj.srs) {
+      alert('Chữ này đã có trong danh sách Luyện tập!');
+      return;
+    }
+    const newSrs = { status: 'bat_dau', streak: 0 };
+    try {
+      const res = await fetch('/api/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          char: char,
+          comps: { srs: newSrs }
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        charObj.srs = newSrs; // update local
+        // force re-render
+        setActiveTab(prev => prev);
+      } else {
+        alert('Lỗi lưu: ' + data.error);
+      }
+    } catch (err) {
+      alert('Lỗi kết nối: ' + err.message);
+    }
+  };
+
+  const renderSrsIcon = (srs) => {
+    if (!srs) return null;
+    switch(srs.status) {
+      case 'bat_dau': return <span title="Bắt đầu">🆕</span>;
+      case 'san_sang_thi': return <span title="Sẵn sàng thi">🎯</span>;
+      case 'hat_mam': return <span title="Hạt mầm">🌱</span>;
+      case 'cay': return <span title="Cây">🌳</span>;
+      case 'hoa': return <span title="Hoa">🌸</span>;
+      default: return null;
+    }
+  };
+
+  return (
+    <div className="tonghop-tab">
+      <div className="tab-navigation">
+        {tabs.map(tab => (
+           <button key={tab} className={`tab-btn ${activeTab === tab ? 'active' : ''}`} onClick={() => setActiveTab(tab)}>
+             {tab}
+           </button>
+        ))}
+      </div>
+      <div className="tonghop-list">
+        {filteredData.map((item, idx) => (
+          <div key={idx} className="tonghop-item">
+             <div className="tonghop-index">{idx + 1}</div>
+             <div className="tonghop-char">{item['Chữ Trung Quốc']}</div>
+             <div className="tonghop-info">
+                <span className="pinyin">{item['Pinyin_Master (Pinyin Chuẩn Tổng Hợp 100%)']}</span>
+                <span className="meaning">{item['Nghĩa Tiếng Việt (Master 100%)']}</span>
+             </div>
+             <div className="tonghop-actions">
+                {renderSrsIcon(item.srs)}
+                {!item.srs && (
+                  <button className="add-btn" onClick={() => handleAddToPractice(item)} title="Thêm vào Luyện tập">+</button>
+                )}
+             </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function LuyenTapTab({ setPrimaryTab, setActiveTab, setGlobalLookupTerm }) {
+  const tabs = [
+    { id: 'bat_dau', label: '🆕 Bắt đầu' },
+    { id: 'san_sang_thi', label: '🎯 Sẵn sàng thi' },
+    { id: 'hat_mam', label: '🌱 Hạt mầm' },
+    { id: 'cay', label: '🌳 Cây' },
+    { id: 'hoa', label: '🌸 Hoa' }
+  ];
+  const [activeTab, setLocalActiveTab] = useState('bat_dau');
+
+  const filteredData = useMemo(() => {
+    return researchDataObj.filter(item => item.srs && item.srs.status === activeTab);
+  }, [activeTab]); // Ideally trigger on changes to srs, simple approach for now
+
+  const handleStudy = (char) => {
+    setGlobalLookupTerm(char);
+    setActiveTab('lookup');
+    setPrimaryTab('tracuu');
+  };
+
+  const handleMoveToReady = async (charObj) => {
+    const newSrs = { ...charObj.srs, status: 'san_sang_thi' };
+    try {
+      const res = await fetch('/api/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          char: charObj['Chữ Trung Quốc'],
+          comps: { srs: newSrs }
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        charObj.srs = newSrs; // update local
+        setLocalActiveTab('bat_dau'); // trigger re-render hack
+      }
+    } catch (err) {}
+  };
+
+  return (
+    <div className="luyentap-tab">
+      <div className="tab-navigation">
+        {tabs.map(tab => (
+           <button key={tab.id} className={`tab-btn ${activeTab === tab.id ? 'active' : ''}`} onClick={() => setLocalActiveTab(tab.id)}>
+             {tab.label}
+           </button>
+        ))}
+      </div>
+      <div className="tonghop-list">
+        {filteredData.map((item, idx) => (
+          <div key={idx} className="tonghop-item">
+             <div className="tonghop-index">{idx + 1}</div>
+             <div className="tonghop-char">{item['Chữ Trung Quốc']}</div>
+             <div className="tonghop-info">
+                <span className="pinyin">{item['Pinyin_Master (Pinyin Chuẩn Tổng Hợp 100%)']}</span>
+                <span className="meaning">{item['Nghĩa Tiếng Việt (Master 100%)']}</span>
+             </div>
+             <div className="tonghop-actions">
+                <button className="study-btn" onClick={() => handleStudy(item['Chữ Trung Quốc'])}>Học</button>
+                {activeTab === 'bat_dau' && (
+                  <button className="ready-btn" onClick={() => handleMoveToReady(item)}>Xong</button>
+                )}
+             </div>
+          </div>
+        ))}
+        {filteredData.length === 0 && <div className="empty-msg">Chưa có chữ nào ở mục này.</div>}
+      </div>
+    </div>
+  );
+}
+
+function TracNghiemTab() {
+  return (
+    <div style={{padding: '2rem', textAlign: 'center'}}>
+       <h2>Màn hình Trắc Nghiệm (Chiết tự)</h2>
+       <p>Tính năng Game đang được hoàn thiện...</p>
     </div>
   );
 }
