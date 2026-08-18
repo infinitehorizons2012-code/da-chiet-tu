@@ -874,8 +874,8 @@ function TongHopTab() {
     'HSK1': 'HSK1', 'HSK2': 'HSK2', 'HSK3': 'HSK3', 'HSK4': 'HSK4', 'HSK5': 'HSK5', 'HSK6': 'HSK6',
     'Chữ Nho': 'ChuNhoTongHop_STT (Giáo trình Chữ Nho)',
     'Chỉ Âm': 'Group',
-    '214 Bộ Thủ': 'group2',
-    'Từ Ghép': 'Số thứ tự words'
+    'Components': 'group2',
+    'Characters': 'Số thứ tự words'
   };
   const [activeTab, setActiveTab] = useState('Tìm Kiếm');
   const [searchTerm, setSearchTerm] = useState('');
@@ -990,8 +990,8 @@ function TongHopTab() {
 
          <button className={`tab-btn ${activeTab === 'Chữ Nho' ? 'active' : ''}`} onClick={() => setActiveTab('Chữ Nho')}>Chữ Nho</button>
          <button className={`tab-btn ${activeTab === 'Chỉ Âm' ? 'active' : ''}`} onClick={() => setActiveTab('Chỉ Âm')}>Chỉ Âm</button>
-         <button className={`tab-btn ${activeTab === '214 Bộ Thủ' ? 'active' : ''}`} onClick={() => setActiveTab('214 Bộ Thủ')}>214 Bộ Thủ</button>
-         <button className={`tab-btn ${activeTab === 'Từ Ghép' ? 'active' : ''}`} onClick={() => setActiveTab('Từ Ghép')}>Từ Ghép</button>
+         <button className={`tab-btn ${activeTab === 'Components' ? 'active' : ''}`} onClick={() => setActiveTab('Components')}>Components</button>
+         <button className={`tab-btn ${activeTab === 'Characters' ? 'active' : ''}`} onClick={() => setActiveTab('Characters')}>Characters</button>
       </div>
       <div className="tonghop-list">
         {activeTab === 'Tìm Kiếm' && (
