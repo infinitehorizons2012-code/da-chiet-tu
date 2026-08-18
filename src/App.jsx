@@ -394,7 +394,7 @@ function ResearchTab() {
     });
   };
 
-  const DETAIL_TABS = ['Ứng dụng', 'Master', 'Xie', 'GavinGrover', 'CHISE', 'Unihan', 'Chữ Nho', 'Jun Da', 'Khác'];
+  const DETAIL_TABS = ['Ứng dụng', 'Chữ Nho', 'Master', 'Xie', 'GavinGrover', 'CHISE', 'Unihan', 'Jun Da', 'Khác'];
   const getTabForKey = (key) => {
     if (key.startsWith('App_')) return 'Ứng dụng';
     if (key.includes('Master')) return 'Master';
