@@ -485,7 +485,7 @@ function ResearchTab() {
 
                  const isEditable = isFieldEditable(key);
                  const val = isEditable && editData[key] !== undefined ? editData[key] : selectedChar[key];
-                 if (!isEditable && (!val || val === 'nan')) return null;
+                 const isMissing = !val || val === 'nan';
                  
                  return (
                    <div key={idx} className="detail-card">
@@ -493,12 +493,18 @@ function ResearchTab() {
                      {isEditable ? (
                        <textarea 
                          className="detail-card-textarea"
-                         value={val === 'nan' ? '' : val}
+                         value={isMissing ? '' : val}
                          onChange={(e) => handleEditChange(key, e.target.value)}
                          placeholder="Nhập nội dung..."
                        />
                      ) : (
-                       <div className="detail-card-value">{renderClickableValue(val)}</div>
+                       <div className="detail-card-value">
+                         {isMissing ? (
+                           <span className="empty-val" style={{fontStyle: 'italic', color: '#94a3b8'}}>Chưa có dữ liệu</span>
+                         ) : (
+                           renderClickableValue(val)
+                         )}
+                       </div>
                      )}
                    </div>
                  );
