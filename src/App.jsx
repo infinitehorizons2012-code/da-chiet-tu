@@ -124,9 +124,9 @@ function LookupTab() {
     if (researchData) {
       const newResult = {
         char: researchData['Chữ Trung Quốc'],
-        pinyin: researchData['Pinyin_Xie'] || '',
-        hanviet: researchData['Âm Hán Việt_Xie'] || '',
-        meaning: researchData['Nghĩa Tiếng Việt_Xie'] || '',
+        pinyin: researchData['Pinyin_Master (Pinyin Chuẩn Tổng Hợp 100%)'] || '',
+        hanviet: researchData['Âm Hán Việt (Master 100%)'] || '',
+        meaning: researchData['Nghĩa Tiếng Việt (Master 100%)'] || '',
         mnemonic: researchData['App_Mnemonic'] || '',
         components: []
       };
@@ -369,8 +369,8 @@ function ResearchTab() {
     const lower = searchTerm.toLowerCase();
     return baseData.filter(item => {
       return (item['Chữ Trung Quốc'] && item['Chữ Trung Quốc'].includes(lower)) || 
-             (item['Pinyin_Xie'] && item['Pinyin_Xie'].toLowerCase().includes(lower)) ||
-             (item['Âm Hán Việt_Xie'] && item['Âm Hán Việt_Xie'].toLowerCase().includes(lower))
+             (item['Pinyin_Master (Pinyin Chuẩn Tổng Hợp 100%)'] && item['Pinyin_Master (Pinyin Chuẩn Tổng Hợp 100%)'].toLowerCase().includes(lower)) ||
+             (item['Âm Hán Việt (Master 100%)'] && item['Âm Hán Việt (Master 100%)'].toLowerCase().includes(lower))
     });
   }, [searchTerm, sortMode]);
 
@@ -435,7 +435,7 @@ function ResearchTab() {
                onClick={() => handleSidebarSelect(item)}
              >
                <span className="research-list-char">{item['Chữ Trung Quốc']}</span>
-               <span className="research-list-pinyin">{item['Pinyin_Xie'] || ''}</span>
+               <span className="research-list-pinyin">{item['Pinyin_Master (Pinyin Chuẩn Tổng Hợp 100%)'] || ''}</span>
              </div>
           ))}
           {filteredData.length > 500 && <div className="research-list-more">...và {filteredData.length - 500} chữ khác</div>}
@@ -461,7 +461,7 @@ function ResearchTab() {
              </div>
              <div className="detail-header">
                 <div className="detail-header-char">{selectedChar['Chữ Trung Quốc']}</div>
-                <div className="detail-pinyin">{selectedChar['Pinyin_Xie']} - {selectedChar['Âm Hán Việt_Xie']}</div>
+                <div className="detail-pinyin">{selectedChar['Pinyin_Master (Pinyin Chuẩn Tổng Hợp 100%)']} - {selectedChar['Âm Hán Việt (Master 100%)']}</div>
              </div>
 
              <div className="detail-inner-tabs">
@@ -478,7 +478,7 @@ function ResearchTab() {
 
              <div className="detail-grid">
                {Object.keys(selectedChar).map((key, idx) => {
-                 if (key === 'Chữ Trung Quốc' || key === 'Pinyin_Xie' || key === 'Âm Hán Việt_Xie') return null;
+                 if (key === 'Chữ Trung Quốc' || key === 'Pinyin_Master (Pinyin Chuẩn Tổng Hợp 100%)' || key === 'Âm Hán Việt (Master 100%)') return null;
                  
                  // Lọc theo tab hiện tại
                  if (getTabForKey(key) !== detailTab) return null;

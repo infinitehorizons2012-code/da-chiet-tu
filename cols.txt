@@ -1,0 +1,68 @@
+0: Chữ Trung Quốc
+1: Pinyin_Master (Pinyin Chuẩn Tổng Hợp 100%)
+2: Âm Hán Việt (Master 100%)
+3: Nghĩa Tiếng Việt (Master 100%)
+4: Link
+5: Số thứ tự
+6: 9000
+7: Group
+8: group2
+9: Số thứ tự words
+10: HSK1
+11: HSK2
+12: HSK3
+13: HSK4
+14: HSK5
+15: HSK6
+16: Breakdown
+17: Components_Hanzicraft
+18: Appears_In
+19: Bộ thủ & thành phần_Xie
+20: Hán Việt_Xie
+21: Tự nguyên_Xie
+22: Dễ nhầm & Liên quan_Xie
+23: STT Chữ Nho Tổng Hợp
+24: Hạng Tần Suất (Jun Da)
+25: GavinGrover_Once (Chiết tự trực tiếp)
+26: GavinGrover_Radical (Chiết tự bộ thủ)
+27: GavinGrover_Graphical (Chiết tự nét vẽ)
+28: GavinGrover_IDC_Raw (Mã IDC thô)
+29: GavinGrover_IDC (Ký hiệu & Cấu trúc không gian)
+30: CC-CEDICT_Pinyin
+31: CC-CEDICT_Meaning (Nghĩa gốc từ điển)
+32: CC-CEDICT_Common_Words (Từ ghép Hay Dùng - High)
+33: CC-CEDICT_Uncommon_Words (Từ ghép Vừa Dùng - Mid)
+34: CC-CEDICT_Rare_Words (Từ ghép Hiếm Dùng - Low)
+35: CHISE_IDS (Chuỗi Chiết tự Không gian Unicode)
+36: CHISE_Traditional (Chữ Phồn thể)
+37: CHISE_Phonetic_Component (Thanh phù - Chỉ Âm)
+38: CHISE_Semantic_Component (Hình phù - Chỉ Ý)
+39: CHISE_Visual_Similarity (Hình cận tự & Họ chữ cùng linh kiện)
+40: Unihan_Unicode_Hex
+41: Unihan_Simplified (Chữ Giản thể)
+42: Unihan_Traditional (Chữ Phồn thể)
+43: ChuNhoTongHop_STT (Giáo trình Chữ Nho)
+44: ChuNhoTongHop_LinhKien (Cấu tạo linh kiện)
+45: ChuNhoTongHop_Chietyu_Giaithich (Chiết tự & Giải thích)
+46: Pinyin_Xie
+47: Âm Hán Việt_Xie
+48: Nghĩa Tiếng Việt_Xie
+49: Link Âm Thanh_Xie
+50: Loại từ & Cách dùng_Xie
+51: Nghĩa & Cách dùng như một từ_Xie
+52: App_Mnemonic
+53: App_Comp_1
+54: App_Comp_2
+55: App_Comp_3
+56: App_Comp_4
+57: App_Comp_5
+58: App_Comp_6
+59: App_Comp_7
+60: App_Comp_8
+61: App_Comp_9
+62: App_Comp_10
+63: App_Comp_11
+64: App_Comp_12
+65: Tần Suất % Đơn Lẻ (Jun Da)
+66: Tần Suất % Cộng Dồn (Jun Da)
+67: Số Lần Xuất Hiện Thô (Jun Da)
