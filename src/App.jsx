@@ -344,6 +344,7 @@ function ResearchTab() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState('');
   const [editData, setEditData] = useState({});
+  const [detailTab, setDetailTab] = useState('Ứng dụng');
 
   useEffect(() => {
     setEditData({});
@@ -457,6 +458,14 @@ function ResearchTab() {
     });
   };
 
+  const DETAIL_TABS = ['Ứng dụng', 'Cơ bản', 'Mở rộng', 'Tham khảo'];
+  const getTabForKey = (key) => {
+    if (key.startsWith('App_')) return 'Ứng dụng';
+    if (key.includes('Nghĩa Tiếng Việt') || key.includes('Hán Việt_') || key.includes('Bộ thủ') || key.includes('Tự nguyên')) return 'Cơ bản';
+    if (key.includes('Cách dùng') || key.includes('Tần Suất') || key === '9000') return 'Mở rộng';
+    return 'Tham khảo';
+  };
+
   return (
     <div className="research-container">
       <div className="research-sidebar">
@@ -518,20 +527,37 @@ function ResearchTab() {
                 <div className="detail-header-char">{selectedChar['Chữ Trung Quốc']}</div>
                 <div className="detail-pinyin">{selectedChar['Pinyin_Xie']} - {selectedChar['Âm Hán Việt_Xie']}</div>
              </div>
+
+             <div className="detail-inner-tabs">
+                {DETAIL_TABS.map(tab => (
+                  <button 
+                    key={tab}
+                    className={`inner-tab ${detailTab === tab ? 'active' : ''}`}
+                    onClick={() => setDetailTab(tab)}
+                  >
+                    {tab}
+                  </button>
+                ))}
+             </div>
+
              <div className="detail-grid">
                {Object.keys(selectedChar).map((key, idx) => {
                  if (key === 'Chữ Trung Quốc' || key === 'Pinyin_Xie' || key === 'Âm Hán Việt_Xie') return null;
+                 
+                 // Lọc theo tab hiện tại
+                 if (getTabForKey(key) !== detailTab) return null;
+
                  const isEditable = isFieldEditable(key);
                  const val = isEditable && editData[key] !== undefined ? editData[key] : selectedChar[key];
                  if (!isEditable && (!val || val === 'nan')) return null;
                  
                  return (
-                   <div className="detail-card" key={idx}>
-                     <div className="detail-card-title">{key}</div>
+                   <div key={idx} className="detail-card">
+                     <div className="detail-card-title">{key.toUpperCase()}</div>
                      {isEditable ? (
                        <textarea 
                          className="detail-card-textarea"
-                         value={val !== 'nan' && val ? val : ''}
+                         value={val === 'nan' ? '' : val}
                          onChange={(e) => handleEditChange(key, e.target.value)}
                          placeholder="Nhập nội dung..."
                        />
@@ -539,7 +565,7 @@ function ResearchTab() {
                        <div className="detail-card-value">{renderClickableValue(val)}</div>
                      )}
                    </div>
-                 )
+                 );
                })}
              </div>
           </div>
