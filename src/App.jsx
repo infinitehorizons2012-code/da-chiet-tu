@@ -109,15 +109,26 @@ function HanziDisplay({ char, components }) {
   );
 }
 
-function LookupTab() {
-  const [searchTerm, setSearchTerm] = useState('')
+function LookupTab({ globalLookupTerm, setGlobalLookupTerm }) {
+  const [searchTerm, setSearchTerm] = useState(globalLookupTerm || '')
   const [result, setResult] = useState(null)
   const [error, setError] = useState('')
 
-  const handleSearch = async (e) => {
+  useEffect(() => {
+    if (globalLookupTerm) {
+      setSearchTerm(globalLookupTerm);
+      handleSearch(null, globalLookupTerm);
+    }
+  }, [globalLookupTerm]);
+
+  const handleSearch = async (e, termOverride = null) => {
     if (e) e.preventDefault()
-    const char = searchTerm.trim()
+    const char = (termOverride !== null ? termOverride : searchTerm).trim()
     if (!char) return
+    
+    if (e && char !== globalLookupTerm) {
+       setGlobalLookupTerm(char);
+    }
     
     const researchData = researchDataObj.find(item => item['Chữ Trung Quốc'] === char);
 
@@ -272,7 +283,7 @@ function LookupTab() {
   )
 }
 
-function ResearchTab() {
+function ResearchTab({ setGlobalLookupTerm }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortMode, setSortMode] = useState('frequency');
   const [selectedChar, setSelectedChar] = useState(null);
@@ -332,6 +343,7 @@ function ResearchTab() {
   const handleSidebarSelect = (charObj) => {
     setHistory([]);
     setSelectedChar(charObj);
+    setGlobalLookupTerm(charObj['Chữ Trung Quốc']);
   };
 
   const handleSelectChar = (charObj) => {
@@ -339,6 +351,7 @@ function ResearchTab() {
       setHistory(prev => [...prev, selectedChar]);
     }
     setSelectedChar(charObj);
+    setGlobalLookupTerm(charObj['Chữ Trung Quốc']);
   };
 
   const handleBack = () => {
@@ -346,6 +359,7 @@ function ResearchTab() {
       const prev = history[history.length - 1];
       setHistory(prevHistory => prevHistory.slice(0, -1));
       setSelectedChar(prev);
+      setGlobalLookupTerm(prev['Chữ Trung Quốc']);
     }
   };
 
@@ -527,6 +541,7 @@ function ResearchTab() {
 function App() {
   const [activeTab, setActiveTab] = useState('lookup');
   const [dataReady, setDataReady] = useState(false);
+  const [globalLookupTerm, setGlobalLookupTerm] = useState('');
 
   useEffect(() => {
     // 1. Fetch static base data
@@ -581,7 +596,7 @@ function App() {
         </button>
       </div>
       
-      {activeTab === 'lookup' ? <LookupTab /> : <ResearchTab />}
+      {activeTab === 'lookup' ? <LookupTab globalLookupTerm={globalLookupTerm} setGlobalLookupTerm={setGlobalLookupTerm} /> : <ResearchTab setGlobalLookupTerm={setGlobalLookupTerm} />}
     </div>
   )
 }
