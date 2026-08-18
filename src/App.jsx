@@ -394,12 +394,17 @@ function ResearchTab() {
     });
   };
 
-  const DETAIL_TABS = ['Ứng dụng', 'Cơ bản', 'Mở rộng', 'Tham khảo'];
+  const DETAIL_TABS = ['Ứng dụng', 'Master', 'Xie', 'GavinGrover', 'CHISE', 'Unihan', 'Chữ Nho', 'Jun Da', 'Khác'];
   const getTabForKey = (key) => {
     if (key.startsWith('App_')) return 'Ứng dụng';
-    if (key.includes('Nghĩa Tiếng Việt') || key.includes('Hán Việt_') || key.includes('Bộ thủ') || key.includes('Tự nguyên')) return 'Cơ bản';
-    if (key.includes('Cách dùng') || key.includes('Tần Suất') || key === '9000') return 'Mở rộng';
-    return 'Tham khảo';
+    if (key.includes('Master')) return 'Master';
+    if (key.includes('_Xie')) return 'Xie';
+    if (key.includes('GavinGrover')) return 'GavinGrover';
+    if (key.includes('CHISE')) return 'CHISE';
+    if (key.includes('Unihan')) return 'Unihan';
+    if (key.includes('ChuNhoTongHop') || key === 'STT Chữ Nho Tổng Hợp') return 'Chữ Nho';
+    if (key.includes('Jun Da')) return 'Jun Da';
+    return 'Khác';
   };
 
   return (
