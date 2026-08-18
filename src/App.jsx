@@ -4,9 +4,65 @@ import './index.css'
 
 let researchDataObj = [];
 
+const SKILLS = [
+  { id: 'chiettu', label: 'Chiết tự' },
+  { id: 'han_pinyin', label: 'Hán -> Pinyin' },
+  { id: 'pinyin_han', label: 'Pinyin -> Hán' },
+  { id: 'han_hanviet', label: 'Hán -> Hán Việt' },
+  { id: 'hanviet_han', label: 'Hán Việt -> Hán' },
+  { id: 'han_nghia', label: 'Hán -> Nghĩa' },
+  { id: 'han_mnemonic', label: 'Hán -> Mnemonic' },
+  { id: 'mnemonic_han', label: 'Mnemonic -> Hán' }
+];
 
+const getSrsStatus = (item, skill) => {
+  if (!item.srs) return null;
+  // Format cũ (chỉ có status string ở gốc)
+  if (item.srs.status && typeof item.srs.status === 'string') {
+     if (skill === 'chiettu') return item.srs.status;
+     return 'bat_dau';
+  }
+  // Format mới
+  if (item.srs[skill]) return item.srs[skill].status;
+  return 'bat_dau';
+};
 
-function Header({ primaryTab, setPrimaryTab }) {
+const getSrsStreak = (item, skill) => {
+  if (!item.srs) return 0;
+  if (item.srs.status && typeof item.srs.status === 'string') {
+     if (skill === 'chiettu') return item.srs.streak || 0;
+     return 0;
+  }
+  if (item.srs[skill]) return item.srs[skill].streak || 0;
+  return 0;
+};
+
+const buildNewSrs = (item, skillToUpdate, newStatus, newStreak) => {
+   let srs = { ...item.srs };
+   if (srs.status && typeof srs.status === 'string') {
+      const oldStatus = srs.status;
+      const oldStreak = srs.streak || 0;
+      srs = {};
+      SKILLS.forEach(s => {
+         srs[s.id] = { status: s.id === 'chiettu' ? oldStatus : 'bat_dau', streak: s.id === 'chiettu' ? oldStreak : 0 };
+      });
+   } else {
+      SKILLS.forEach(s => {
+         if (!srs[s.id]) srs[s.id] = { status: 'bat_dau', streak: 0 };
+      });
+   }
+   
+   if (skillToUpdate) {
+      srs[skillToUpdate] = { status: newStatus, streak: newStreak };
+   }
+   return srs;
+};
+
+function Header({ primaryTab, setPrimaryTab, currentUser, setCurrentUser }) {
+  const handleLogout = () => {
+    setCurrentUser(null);
+  };
+
   return (
     <header className="app-header">
       <div className="header-left">
@@ -34,10 +90,10 @@ function Header({ primaryTab, setPrimaryTab }) {
 
       <div className="header-right">
         <div className="user-info">
-          <span className="username">hang</span>
+          <span className="username">{currentUser || 'hang'}</span>
           <span className="user-xp">⚡ 90 XP</span>
         </div>
-        <button className="icon-button">🚪</button>
+        <button className="icon-button" onClick={handleLogout} title="Đăng xuất">🚪</button>
       </div>
     </header>
   );
@@ -318,6 +374,7 @@ function ResearchTab({ globalLookupTerm, setGlobalLookupTerm }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          username: currentUser,
           char: selectedChar['Chữ Trung Quốc'],
           comps: editData
         })
@@ -561,24 +618,133 @@ function ResearchTab({ globalLookupTerm, setGlobalLookupTerm }) {
   )
 }
 
+
+function LoginScreen({ onLogin }) {
+  const [isRegister, setIsRegister] = useState(false);
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    const action = isRegister ? 'register' : 'login';
+    try {
+      const res = await fetch(`/api/auth?action=${action}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: currentUser, username, password })
+      });
+      const data = await res.json();
+      if (data.success) {
+         if (isRegister) {
+            setIsRegister(false);
+            setError('Tạo tài khoản thành công! Hãy đăng nhập.');
+         } else {
+            onLogin(username);
+         }
+      } else {
+         setError(data.error);
+      }
+    } catch (err) {
+      setError('Lỗi kết nối');
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!window.confirm('Bạn có chắc chắn muốn xóa tài khoản này và TOÀN BỘ dữ liệu học tập không?')) return;
+    try {
+      const res = await fetch(`/api/auth?action=delete`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: currentUser, username, password })
+      });
+      const data = await res.json();
+      if (data.success) {
+         setError('Xóa tài khoản thành công!');
+         setUsername('');
+         setPassword('');
+      } else {
+         setError(data.error);
+      }
+    } catch (err) {
+      setError('Lỗi kết nối');
+    }
+  };
+
+  return (
+    <div style={{display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#f8fafc'}}>
+      <div style={{background: 'white', padding: '40px', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', width: '400px'}}>
+        <h2 style={{textAlign: 'center', marginBottom: '20px', color: '#1e293b'}}>{isRegister ? 'Tạo Tài Khoản' : 'Đăng Nhập'}</h2>
+        <form onSubmit={handleSubmit} style={{display: 'flex', flexDirection: 'column', gap: '15px'}}>
+          <input 
+            type="text" 
+            placeholder="Tên tài khoản (vd: bebi)" 
+            value={username} 
+            onChange={e => setUsername(e.target.value)}
+            style={{padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1'}}
+            required 
+          />
+          <input 
+            type="password" 
+            placeholder="Mật khẩu" 
+            value={password} 
+            onChange={e => setPassword(e.target.value)}
+            style={{padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1'}}
+            required 
+          />
+          {error && <div style={{color: error.includes('thành công') ? 'green' : 'red', fontSize: '0.9rem'}}>{error}</div>}
+          <button type="submit" style={{background: '#3b82f6', color: 'white', padding: '10px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer'}}>
+            {isRegister ? 'Đăng ký' : 'Đăng nhập'}
+          </button>
+        </form>
+        <div style={{marginTop: '20px', textAlign: 'center', fontSize: '0.9rem'}}>
+          <span style={{color: '#64748b', cursor: 'pointer', textDecoration: 'underline'}} onClick={() => setIsRegister(!isRegister)}>
+            {isRegister ? 'Đã có tài khoản? Đăng nhập' : 'Chưa có tài khoản? Đăng ký'}
+          </span>
+        </div>
+        {!isRegister && (
+          <div style={{marginTop: '15px', textAlign: 'center', fontSize: '0.9rem'}}>
+            <span style={{color: '#ef4444', cursor: 'pointer', textDecoration: 'underline'}} onClick={handleDelete}>
+              Xóa tài khoản này
+            </span>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function App() {
   const [primaryTab, setPrimaryTab] = useState('tracuu');
   const [activeTab, setActiveTab] = useState('lookup');
   const [dataReady, setDataReady] = useState(false);
   const [globalLookupTerm, setGlobalLookupTerm] = useState('');
+  const [currentUser, setCurrentUser] = useState(null);
+  const [baseDataLoaded, setBaseDataLoaded] = useState(false);
 
   useEffect(() => {
-    // 1. Fetch static base data
+    // 1. Fetch static base data ONCE
     Promise.all([
       fetch('/data/research_data_1.json').then(res => res.json()),
       fetch('/data/research_data_2.json').then(res => res.json())
     ])
       .then(([part1, part2]) => {
-        researchDataObj.push(...part1, ...part2); // Populate global array
-        
-        // 2. Fetch user edits from Cloudflare D1 Database
-        return fetch('/api/updates');
-      })
+        researchDataObj.push(...part1, ...part2);
+        setBaseDataLoaded(true);
+      });
+  }, []);
+
+  useEffect(() => {
+    if (!currentUser || !baseDataLoaded) return;
+    
+    setDataReady(false);
+    // Reset SRS and user data
+    researchDataObj.forEach(item => { item.srs = undefined; item.quiz_mapping = undefined; item.parsedComps = undefined; });
+
+    fetch(`/api/updates?username=${currentUser}`)
       .then(res => res.json())
       .then(data => {
         if (data && data.success && data.updates) {
@@ -593,10 +759,14 @@ function App() {
         setDataReady(true);
       })
       .catch(err => {
-        console.error("Failed to load data:", err);
-        setDataReady(true); // Vẫn cho phép chạy dùng data gốc
+        console.error("Failed to load updates:", err);
+        setDataReady(true);
       });
-  }, []);
+  }, [currentUser, baseDataLoaded]);
+
+  if (!currentUser) {
+    return <LoginScreen onLogin={setCurrentUser} />;
+  }
 
   if (!dataReady) {
     return <div style={{textAlign: 'center', marginTop: '50px'}}>Đang đồng bộ dữ liệu từ Cloudflare...</div>;
@@ -604,7 +774,7 @@ function App() {
 
   return (
     <div className="app-container">
-      <Header primaryTab={primaryTab} setPrimaryTab={setPrimaryTab} />
+      <Header primaryTab={primaryTab} setPrimaryTab={setPrimaryTab} currentUser={currentUser} setCurrentUser={setCurrentUser} />
       
       {primaryTab === 'tracuu' && (
         <>
@@ -635,11 +805,11 @@ function App() {
         </>
       )}
 
-      {primaryTab === 'tonghop' && <TongHopTab />}
+      {primaryTab === 'tonghop' && <TongHopTab currentUser={currentUser} />}
       
       {primaryTab === 'luyentap' && <LuyenTapTab setPrimaryTab={setPrimaryTab} setActiveTab={setActiveTab} setGlobalLookupTerm={setGlobalLookupTerm} />}
       
-      {primaryTab === 'tracnghiem' && <TracNghiemTab />}
+      {primaryTab === 'tracnghiem' && <TracNghiemTab currentUser={currentUser} />}
       
     </div>
   )
@@ -779,6 +949,7 @@ function ChietTuAdminTab({ globalLookupTerm, setGlobalLookupTerm }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          username: currentUser,
           char: result.char,
           comps: { quiz_mapping }
         })
@@ -853,13 +1024,13 @@ function ChietTuAdminTab({ globalLookupTerm, setGlobalLookupTerm }) {
               ))}
             </div>
             
-            <button 
-              className="save-btn" 
-              onClick={handleSave} 
-              disabled={saving}
-            >
-              {saving ? 'Đang lưu...' : 'Lưu Đáp Án'}
-            </button>
+            {currentUser === 'admin' ? (
+              <button className="save-btn" onClick={handleSave} disabled={saving}>
+                {saving ? 'Đang lưu...' : 'Lưu Đáp Án'}
+              </button>
+            ) : (
+              <div style={{marginTop: '20px', color: '#ef4444', fontWeight: 'bold', textAlign: 'center'}}>Chỉ Admin mới có quyền lưu đáp án.</div>
+            )}
           </div>
         </div>
       )}
@@ -867,7 +1038,7 @@ function ChietTuAdminTab({ globalLookupTerm, setGlobalLookupTerm }) {
   );
 }
 
-function TongHopTab() {
+function TongHopTab({ currentUser }) {
   const hskTabs = ['HSK1', 'HSK2', 'HSK3', 'HSK4', 'HSK5', 'HSK6'];
   const colMap = {
     '9000': '9000',
@@ -927,7 +1098,7 @@ function TongHopTab() {
       alert('Chữ này đã có trong danh sách Luyện tập!');
       return;
     }
-    const newSrs = { status: 'bat_dau', streak: 0 };
+    const newSrs = buildNewSrs(charObj, null, null, null); // Builds default structure
     
     // Optimistic UI Update
     charObj.srs = newSrs; 
@@ -938,6 +1109,7 @@ function TongHopTab() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          username: currentUser,
           char: char,
           comps: { srs: newSrs }
         })
@@ -955,9 +1127,10 @@ function TongHopTab() {
     }
   };
 
-  const renderSrsIcon = (srs) => {
+  const renderSrsIcon = (srs, item) => {
     if (!srs) return null;
-    switch(srs.status) {
+    const status = getSrsStatus(item, 'chiettu');
+    switch(status) {
       case 'bat_dau': return <span title="Bắt đầu">🆕</span>;
       case 'san_sang_thi': return <span title="Sẵn sàng thi">🎯</span>;
       case 'hat_mam': return <span title="Hạt mầm">🌱</span>;
@@ -1032,7 +1205,7 @@ function TongHopTab() {
                 ) : (
                     <button className="study-btn" style={{marginRight: '10px', background: '#64748b'}} onClick={() => setTargetCharToScroll(item['Chữ Trung Quốc'])}>Ghim</button>
                 )}
-                {renderSrsIcon(item.srs)}
+                {renderSrsIcon(item.srs, item)}
                 {!item.srs && (
                   <button className="add-btn" onClick={() => handleAddToPractice(item)} title="Thêm vào Luyện tập">+</button>
                 )}
@@ -1044,7 +1217,7 @@ function TongHopTab() {
   );
 }
 
-function LuyenTapTab({ setPrimaryTab, setActiveTab, setGlobalLookupTerm }) {
+function LuyenTapTab({ setPrimaryTab, setActiveTab, setGlobalLookupTerm, currentUser }) {
   const tabs = [
     { id: 'bat_dau', label: '🆕 Bắt đầu' },
     { id: 'san_sang_thi', label: '🎯 Sẵn sàng thi' },
@@ -1053,11 +1226,15 @@ function LuyenTapTab({ setPrimaryTab, setActiveTab, setGlobalLookupTerm }) {
     { id: 'hoa', label: '🌸 Hoa' }
   ];
   const [activeTab, setLocalActiveTab] = useState('bat_dau');
+  const [selectedSkill, setSelectedSkill] = useState('chiettu');
   const [renderTrigger, setRenderTrigger] = useState(0);
 
   const filteredData = useMemo(() => {
-    return researchDataObj.filter(item => item.srs && item.srs.status === activeTab);
-  }, [activeTab, renderTrigger]);
+    return researchDataObj.filter(item => {
+      if (!item.srs) return false;
+      return getSrsStatus(item, selectedSkill) === activeTab;
+    });
+  }, [activeTab, selectedSkill, renderTrigger]);
 
   const handleStudy = (char) => {
     setGlobalLookupTerm(char);
@@ -1067,7 +1244,7 @@ function LuyenTapTab({ setPrimaryTab, setActiveTab, setGlobalLookupTerm }) {
 
   const handleMoveToReady = async (charObj) => {
     const originalSrs = { ...charObj.srs };
-    const newSrs = { ...charObj.srs, status: 'san_sang_thi' };
+    const newSrs = buildNewSrs(charObj, selectedSkill, 'san_sang_thi', 0);
     
     // Optimistic UI Update
     charObj.srs = newSrs;
@@ -1078,6 +1255,7 @@ function LuyenTapTab({ setPrimaryTab, setActiveTab, setGlobalLookupTerm }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          username: currentUser,
           char: charObj['Chữ Trung Quốc'],
           comps: { srs: newSrs }
         })
@@ -1095,12 +1273,23 @@ function LuyenTapTab({ setPrimaryTab, setActiveTab, setGlobalLookupTerm }) {
 
   return (
     <div className="luyentap-tab">
-      <div className="tab-navigation">
-        {tabs.map(tab => (
-           <button key={tab.id} className={`tab-btn ${activeTab === tab.id ? 'active' : ''}`} onClick={() => setLocalActiveTab(tab.id)}>
-             {tab.label}
-           </button>
-        ))}
+      <div className="tab-navigation" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+        <div>
+          {tabs.map(tab => (
+             <button key={tab.id} className={`tab-btn ${activeTab === tab.id ? 'active' : ''}`} onClick={() => setLocalActiveTab(tab.id)}>
+               {tab.label}
+             </button>
+          ))}
+        </div>
+        <div>
+          <select 
+            value={selectedSkill} 
+            onChange={e => setSelectedSkill(e.target.value)}
+            style={{padding: '8px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '1rem', outline: 'none'}}
+          >
+            {SKILLS.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
+          </select>
+        </div>
       </div>
       <div className="tonghop-list">
         {filteredData.map((item, idx) => (
@@ -1125,7 +1314,8 @@ function LuyenTapTab({ setPrimaryTab, setActiveTab, setGlobalLookupTerm }) {
   );
 }
 
-function TracNghiemTab() {
+function TracNghiemTab({ currentUser }) {
+  const [quizMode, setQuizMode] = useState('chiettu');
   const [dueChars, setDueChars] = useState([]);
   const [currentChar, setCurrentChar] = useState(null);
   const [strokePaths, setStrokePaths] = useState([]);
@@ -1133,17 +1323,19 @@ function TracNghiemTab() {
   const [activeComp, setActiveComp] = useState(null);
   const [feedback, setFeedback] = useState(null);
   const [loading, setLoading] = useState(false);
-
   const [isRevealed, setIsRevealed] = useState(false);
+  const [mcq, setMcq] = useState(null);
+  const [selectedOption, setSelectedOption] = useState(null);
 
   useEffect(() => {
      const eligible = researchDataObj.filter(item => {
-        const status = item.srs?.status;
+        const status = getSrsStatus(item, quizMode);
         return status && status !== 'bat_dau';
      });
      eligible.sort(() => Math.random() - 0.5); 
      setDueChars(eligible);
-  }, []);
+     setCurrentChar(null);
+  }, [quizMode]);
 
   useEffect(() => {
      if (dueChars.length > 0 && !currentChar) {
@@ -1151,33 +1343,95 @@ function TracNghiemTab() {
      }
   }, [dueChars, currentChar]);
 
+  const generateMultipleChoice = (charObj, mode) => {
+     let questionText = '';
+     let answerText = '';
+     let options = [];
+     let questionField = '';
+     let answerField = '';
+     
+     if (mode === 'han_pinyin') {
+        questionText = `Chọn Pinyin đúng cho chữ: ${charObj['Chữ Trung Quốc']}`;
+        answerText = charObj['Pinyin_Master (Pinyin Chuẩn Tổng Hợp 100%)'];
+        answerField = 'Pinyin_Master (Pinyin Chuẩn Tổng Hợp 100%)';
+     } else if (mode === 'pinyin_han') {
+        questionText = `Chọn chữ Hán có Pinyin là: ${charObj['Pinyin_Master (Pinyin Chuẩn Tổng Hợp 100%)']}`;
+        answerText = charObj['Chữ Trung Quốc'];
+        answerField = 'Chữ Trung Quốc';
+        questionField = 'Pinyin_Master (Pinyin Chuẩn Tổng Hợp 100%)';
+     } else if (mode === 'han_hanviet') {
+        questionText = `Chọn Âm Hán Việt đúng cho chữ: ${charObj['Chữ Trung Quốc']}`;
+        answerText = charObj['Âm Hán Việt (Master 100%)'];
+        answerField = 'Âm Hán Việt (Master 100%)';
+     } else if (mode === 'hanviet_han') {
+        questionText = `Chọn chữ Hán có Âm Hán Việt là: ${charObj['Âm Hán Việt (Master 100%)']}`;
+        answerText = charObj['Chữ Trung Quốc'];
+        answerField = 'Chữ Trung Quốc';
+        questionField = 'Âm Hán Việt (Master 100%)';
+     } else if (mode === 'han_nghia') {
+        questionText = `Chọn nghĩa đúng cho chữ: ${charObj['Chữ Trung Quốc']}`;
+        answerText = charObj['Nghĩa Tiếng Việt (Master 100%)'];
+        answerField = 'Nghĩa Tiếng Việt (Master 100%)';
+     } else if (mode === 'han_mnemonic') {
+        questionText = `Chọn cách ghi nhớ đúng cho chữ: ${charObj['Chữ Trung Quốc']}`;
+        answerText = charObj['App_Mnemonic'];
+        answerField = 'App_Mnemonic';
+     } else if (mode === 'mnemonic_han') {
+        questionText = `Mnemonic sau đây là của chữ Hán nào:\n"${charObj['App_Mnemonic']}"`;
+        answerText = charObj['Chữ Trung Quốc'];
+        answerField = 'Chữ Trung Quốc';
+        questionField = 'App_Mnemonic';
+     }
+
+     if (!answerText || answerText === 'nan') return null;
+
+     let validPool = researchDataObj.filter(item => {
+        if (item['Chữ Trung Quốc'] === charObj['Chữ Trung Quốc']) return false;
+        if (!item[answerField] || item[answerField] === 'nan' || item[answerField] === '') return false;
+        if (questionField && item[questionField] === charObj[questionField]) return false;
+        if (item[answerField] === answerText) return false;
+        return true;
+     });
+
+     validPool.sort(() => Math.random() - 0.5);
+     const distractors = validPool.slice(0, 3).map(i => i[answerField]);
+     
+     options = [answerText, ...distractors].sort(() => Math.random() - 0.5);
+     
+     return { questionText, options, correctAnswer: answerText };
+  };
+
   const loadNextCharacter = async (charObj) => {
     setLoading(true);
     setFeedback(null);
     setStrokeColors({});
     setActiveComp(null);
     setIsRevealed(false);
-    const char = charObj['Chữ Trung Quốc'];
+    setSelectedOption(null);
+    setMcq(null);
     
+    if (quizMode !== 'chiettu') {
+       const mcqData = generateMultipleChoice(charObj, quizMode);
+       setMcq(mcqData);
+       if (!mcqData) {
+          setFeedback({ type: 'error', message: 'Dữ liệu của chữ này bị thiếu, không tạo được câu hỏi.' });
+       }
+       setCurrentChar(charObj);
+       setLoading(false);
+       return;
+    }
+
+    const char = charObj['Chữ Trung Quốc'];
     const comps = [];
-    const COLORS = [
-      '#e11d48', '#2563eb', '#059669', '#eab308', 
-      '#a855f7', '#10b981', '#f97316', '#14b8a6', 
-      '#6366f1', '#ec4899', '#8b5cf6', '#0ea5e9'
-    ];
+    const COLORS = [ '#e11d48', '#2563eb', '#059669', '#eab308', '#a855f7', '#10b981', '#f97316', '#14b8a6', '#6366f1', '#ec4899', '#8b5cf6', '#0ea5e9' ];
     let compIndex = 0;
     for (let i = 1; i <= 12; i++) {
       const compStr = charObj[`App_Comp_${i}`];
       if (compStr && compStr !== 'nan' && compStr.trim() !== '') {
-        comps.push({
-          id: `App_Comp_${i}`,
-          text: compStr.trim(),
-          color: COLORS[compIndex % COLORS.length]
-        });
+        comps.push({ id: `App_Comp_${i}`, text: compStr.trim(), color: COLORS[compIndex % COLORS.length] });
         compIndex++;
       }
     }
-    
     charObj.parsedComps = comps;
     if (comps.length > 0) setActiveComp(comps[0]);
     setCurrentChar(charObj);
@@ -1201,7 +1455,7 @@ function TracNghiemTab() {
   const CYCLE_COLORS = ['#cbd5e1', '#e11d48', '#2563eb', '#059669', '#eab308', '#a855f7', '#f97316'];
 
   const handleStrokeClick = (strokeIndex) => {
-    if (isRevealed) return;
+    if (isRevealed || quizMode !== 'chiettu') return;
     setStrokeColors(prev => {
       const next = { ...prev };
       const currentColor = next[strokeIndex] || '#cbd5e1';
@@ -1215,40 +1469,48 @@ function TracNghiemTab() {
 
   const updateSrs = async (isCorrect) => {
      if (!currentChar) return;
-     let srs = { ...currentChar.srs };
+     
+     const currentStatus = getSrsStatus(currentChar, quizMode);
+     const currentStreak = getSrsStreak(currentChar, quizMode);
+     
+     let newStatus = currentStatus;
+     let newStreak = currentStreak;
      
      if (isCorrect) {
-        if (srs.status === 'san_sang_thi') {
-           srs.status = 'hat_mam'; srs.streak = 1;
-        } else if (srs.status === 'hat_mam') {
-           srs.streak = (srs.streak || 1) + 1;
-           if (srs.streak >= 2) srs.status = 'cay';
-        } else if (srs.status === 'cay') {
-           srs.streak = (srs.streak || 2) + 1;
-           if (srs.streak >= 3) srs.status = 'hoa';
-        } else if (srs.status === 'hoa') {
-           srs.streak = (srs.streak || 3) + 1;
+        if (currentStatus === 'san_sang_thi') {
+           newStatus = 'hat_mam'; newStreak = 1;
+        } else if (currentStatus === 'hat_mam') {
+           newStreak += 1;
+           if (newStreak >= 2) newStatus = 'cay';
+        } else if (currentStatus === 'cay') {
+           newStreak += 1;
+           if (newStreak >= 3) newStatus = 'hoa';
+        } else if (currentStatus === 'hoa') {
+           newStreak += 1;
         }
      } else {
-        if (srs.status === 'hoa') srs.status = 'cay';
-        else if (srs.status === 'cay') srs.status = 'hat_mam';
-        else if (srs.status === 'hat_mam') srs.status = 'san_sang_thi';
-        srs.streak = 0;
+        if (currentStatus === 'hoa') newStatus = 'cay';
+        else if (currentStatus === 'cay') newStatus = 'hat_mam';
+        else if (currentStatus === 'hat_mam') newStatus = 'san_sang_thi';
+        newStreak = 0;
      }
+
+     const newSrs = buildNewSrs(currentChar, quizMode, newStatus, newStreak);
 
      try {
        await fetch('/api/save', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ char: currentChar['Chữ Trung Quốc'], comps: { srs } })
+          body: JSON.stringify({
+          username: currentUser, char: currentChar['Chữ Trung Quốc'], comps: { srs: newSrs } })
        });
-       currentChar.srs = srs;
+       currentChar.srs = newSrs;
      } catch(e) {}
      
      nextChar();
   };
 
-  const checkAnswer = () => {
+  const checkAnswerChiettu = () => {
     if (!currentChar) return;
     const mapping = currentChar.quiz_mapping;
     if (!mapping) {
@@ -1257,11 +1519,10 @@ function TracNghiemTab() {
        return;
     }
 
-    // Kiểm tra tính đúng đắn bằng cách so sánh các nhóm nét (partitions)
     const dbGroups = Object.values(mapping).map(arr => [...arr].sort((a,b)=>a-b));
     const userGroupsObj = {};
     Object.entries(strokeColors).forEach(([strokeIdx, color]) => {
-       if (color === '#cbd5e1' || !color) return; // Bỏ qua nét chưa tô màu
+       if (color === '#cbd5e1' || !color) return; 
        if (!userGroupsObj[color]) userGroupsObj[color] = [];
        userGroupsObj[color].push(parseInt(strokeIdx, 10));
     });
@@ -1282,6 +1543,19 @@ function TracNghiemTab() {
     setIsRevealed(true);
   };
 
+  const handleOptionClick = (option) => {
+     if (isRevealed) return;
+     setSelectedOption(option);
+     setIsRevealed(true);
+     const isCorrect = option === mcq.correctAnswer;
+     if (isCorrect) {
+        setFeedback({ type: 'success', message: 'Chính xác!' });
+        setTimeout(() => updateSrs(true), 1500); 
+     } else {
+        setFeedback({ type: 'error', message: `Chưa chính xác! Đáp án đúng là: ${mcq.correctAnswer}` });
+     }
+  };
+
   const nextChar = () => {
      setDueChars(prev => {
         const nextQ = prev.slice(1);
@@ -1291,85 +1565,151 @@ function TracNghiemTab() {
      });
   };
 
-  if (dueChars.length === 0) {
-     return <div className="empty-msg" style={{textAlign: 'center', padding: '50px', fontSize: '1.2rem', color: '#64748b'}}>Bạn đã hoàn thành tất cả chữ Hán cần ôn tập hôm nay!</div>;
-  }
-
-  if (!currentChar || loading) {
-     return <div style={{textAlign: 'center', padding: '50px'}}>Đang tải bài tập...</div>;
-  }
-
   const srsIcons = { 'san_sang_thi': '🎯 Sẵn sàng thi', 'hat_mam': '🌱 Hạt mầm', 'cay': '🌳 Cây', 'hoa': '🌸 Hoa' };
 
   return (
     <div className="tracnghiem-tab" style={{padding: '20px', maxWidth: '900px', margin: '0 auto'}}>
-      <div className="tracnghiem-header" style={{textAlign: 'center', marginBottom: '20px'}}>
-         <h2 style={{color: '#1e293b'}}>Trắc nghiệm: Phân tách nét chữ tương ứng linh kiện</h2>
-         <div className="srs-badge" style={{display: 'inline-block', background: '#e0f2fe', color: '#0284c7', padding: '5px 15px', borderRadius: '20px', fontWeight: 'bold', marginTop: '10px'}}>
-            Cấp bậc hiện tại: {srsIcons[currentChar.srs?.status] || 'Không xác định'}
-         </div>
+      <div className="tab-navigation" style={{display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '20px', justifyContent: 'center'}}>
+        {SKILLS.map(skill => (
+           <button 
+             key={skill.id} 
+             className={`tab-btn ${quizMode === skill.id ? 'active' : ''}`} 
+             onClick={() => setQuizMode(skill.id)}
+             style={{fontSize: '0.9rem', padding: '8px 12px'}}
+           >
+             {skill.label}
+           </button>
+        ))}
       </div>
-      <div className="chiettu-workspace">
-        <div className="chiettu-svg-container">
-          <svg viewBox="0 0 1024 1024" className="hanzi-svg">
-            <g transform="scale(1, -1) translate(0, -900)">
-              {strokePaths.map((path, idx) => (
-                <path 
-                  key={idx} 
-                  d={path} 
-                  className="hanzi-stroke-path"
-                  fill={strokeColors[idx] || '#cbd5e1'} 
-                  onClick={() => handleStrokeClick(idx)}
-                  style={{cursor: isRevealed ? 'default' : 'pointer'}}
-                />
-              ))}
-            </g>
-          </svg>
-          {feedback && (
-             <div className={`feedback-box ${feedback.type}`} style={{marginTop: '20px', padding: '15px', borderRadius: '8px', fontWeight: 'bold', background: feedback.type === 'success' ? '#dcfce7' : '#fee2e2', color: feedback.type === 'success' ? '#166534' : '#991b1b'}}>
-                {feedback.message}
+
+      {dueChars.length === 0 ? (
+         <div className="empty-msg" style={{textAlign: 'center', padding: '50px', fontSize: '1.2rem', color: '#64748b'}}>
+            Bạn đã hoàn thành tất cả bài tập cho chế độ này hôm nay!
+         </div>
+      ) : !currentChar || loading ? (
+         <div style={{textAlign: 'center', padding: '50px'}}>Đang tải bài tập...</div>
+      ) : (
+        <>
+          <div className="tracnghiem-header" style={{textAlign: 'center', marginBottom: '20px'}}>
+             <div className="srs-badge" style={{display: 'inline-block', background: '#e0f2fe', color: '#0284c7', padding: '5px 15px', borderRadius: '20px', fontWeight: 'bold'}}>
+                Cấp bậc hiện tại: {srsIcons[getSrsStatus(currentChar, quizMode)] || 'Không xác định'}
              </div>
-          )}
-        </div>
-        
-        <div className="chiettu-components-panel" style={{display: 'flex', flexDirection: 'column', justifyContent: 'center'}}>
-          {!isRevealed ? (
-             <div style={{textAlign: 'center'}}>
-               <h3 style={{marginBottom: '10px', color: '#64748b'}}>Phân tách nét chữ thành linh kiện</h3>
-               <p style={{marginBottom: '20px', color: '#64748b', fontSize: '0.9rem'}}>Nhấp vào các nét bên trái để tự động gom nhóm bằng màu sắc.</p>
-               <button className="save-btn" onClick={checkAnswer} style={{background: '#3b82f6', fontSize: '1.2rem', padding: '15px 30px', width: '100%'}}>Kiểm tra đối chiếu</button>
-             </div>
-          ) : (
-             <>
-               <h3>Đáp án: Các linh kiện ({currentChar['Chữ Trung Quốc']})</h3>
-               <div className="comp-list">
-                 {currentChar.parsedComps.map(comp => (
-                   <div 
-                     key={comp.id}
-                     className="comp-item"
-                     style={{ borderLeftColor: comp.color }}
-                   >
-                     <div className="comp-color-box" style={{ backgroundColor: comp.color }}></div>
-                     <span className="comp-text">{comp.text}</span>
-                   </div>
-                 ))}
+          </div>
+
+          {quizMode === 'chiettu' ? (
+             <div className="chiettu-workspace">
+               <div className="chiettu-svg-container">
+                 <svg viewBox="0 0 1024 1024" className="hanzi-svg">
+                   <g transform="scale(1, -1) translate(0, -900)">
+                     {strokePaths.map((path, idx) => (
+                       <path 
+                         key={idx} 
+                         d={path} 
+                         className="hanzi-stroke-path"
+                         fill={strokeColors[idx] || '#cbd5e1'} 
+                         onClick={() => handleStrokeClick(idx)}
+                         style={{cursor: isRevealed ? 'default' : 'pointer'}}
+                       />
+                     ))}
+                   </g>
+                 </svg>
+                 {feedback && (
+                    <div className={`feedback-box ${feedback.type}`} style={{marginTop: '20px', padding: '15px', borderRadius: '8px', fontWeight: 'bold', background: feedback.type === 'success' ? '#dcfce7' : '#fee2e2', color: feedback.type === 'success' ? '#166534' : '#991b1b'}}>
+                       {feedback.message}
+                    </div>
+                 )}
                </div>
                
-               {!feedback ? (
-                  <div style={{marginTop: '30px'}}>
-                     <h4 style={{textAlign: 'center', marginBottom: '15px'}}>Bạn làm đúng chứ?</h4>
-                     <div style={{display: 'flex', gap: '15px'}}>
-                        <button className="save-btn" onClick={() => updateSrs(false)} style={{background: '#ef4444', flex: 1}}>Sai (Làm lại sau)</button>
-                        <button className="save-btn" onClick={() => updateSrs(true)} style={{background: '#10b981', flex: 1}}>Đúng (Lên cấp)</button>
-                     </div>
-                  </div>
+               <div className="chiettu-components-panel" style={{display: 'flex', flexDirection: 'column', justifyContent: 'center'}}>
+                 {!isRevealed ? (
+                    <div style={{textAlign: 'center'}}>
+                      <h3 style={{marginBottom: '10px', color: '#64748b'}}>Phân tách nét chữ thành linh kiện</h3>
+                      <p style={{marginBottom: '20px', color: '#64748b', fontSize: '0.9rem'}}>Nhấp vào các nét bên trái để tự động gom nhóm bằng màu sắc.</p>
+                      <button className="save-btn" onClick={checkAnswerChiettu} style={{background: '#3b82f6', fontSize: '1.2rem', padding: '15px 30px', width: '100%'}}>Kiểm tra đối chiếu</button>
+                    </div>
+                 ) : (
+                    <>
+                      <h3>Đáp án: Các linh kiện ({currentChar['Chữ Trung Quốc']})</h3>
+                      <div className="comp-list">
+                        {currentChar.parsedComps.map(comp => (
+                          <div key={comp.id} className="comp-item" style={{ borderLeftColor: comp.color }}>
+                            <div className="comp-color-box" style={{ backgroundColor: comp.color }}></div>
+                            <span className="comp-text">{comp.text}</span>
+                          </div>
+                        ))}
+                      </div>
+                      {!feedback ? (
+                         <div style={{marginTop: '30px'}}>
+                            <h4 style={{textAlign: 'center', marginBottom: '15px'}}>Bạn làm đúng chứ?</h4>
+                            <div style={{display: 'flex', gap: '15px'}}>
+                               <button className="save-btn" onClick={() => updateSrs(false)} style={{background: '#ef4444', flex: 1}}>Sai (Làm lại sau)</button>
+                               <button className="save-btn" onClick={() => updateSrs(true)} style={{background: '#10b981', flex: 1}}>Đúng (Lên cấp)</button>
+                            </div>
+                         </div>
+                      ) : (
+                         <button className="save-btn next-btn" onClick={nextChar} style={{background: '#10b981', marginTop: '20px'}}>Câu Tiếp Theo ➔</button>
+                      )}
+                    </>
+                 )}
+               </div>
+             </div>
+          ) : (
+             <div className="mcq-workspace" style={{background: 'white', padding: '30px', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', textAlign: 'center'}}>
+               {mcq ? (
+                  <>
+                    <h3 style={{fontSize: '1.3rem', color: '#334155', marginBottom: '30px', whiteSpace: 'pre-wrap'}}>{mcq.questionText}</h3>
+                    <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px'}}>
+                       {mcq.options.map((opt, idx) => {
+                          let bg = '#f8fafc';
+                          let color = '#334155';
+                          let border = '2px solid #e2e8f0';
+                          if (isRevealed) {
+                             if (opt === mcq.correctAnswer) {
+                                bg = '#dcfce7'; color = '#166534'; border = '2px solid #22c55e';
+                             } else if (opt === selectedOption) {
+                                bg = '#fee2e2'; color = '#991b1b'; border = '2px solid #ef4444';
+                             }
+                          }
+                          return (
+                             <button 
+                               key={idx}
+                               onClick={() => handleOptionClick(opt)}
+                               disabled={isRevealed}
+                               style={{
+                                 padding: '20px', 
+                                 fontSize: '1.2rem', 
+                                 borderRadius: '12px',
+                                 background: bg,
+                                 color: color,
+                                 border: border,
+                                 cursor: isRevealed ? 'default' : 'pointer',
+                                 transition: 'all 0.2s'
+                               }}
+                             >
+                               {opt}
+                             </button>
+                          );
+                       })}
+                    </div>
+                    {feedback && (
+                       <div className={`feedback-box ${feedback.type}`} style={{marginTop: '20px', padding: '15px', borderRadius: '8px', fontWeight: 'bold', background: feedback.type === 'success' ? '#dcfce7' : '#fee2e2', color: feedback.type === 'success' ? '#166534' : '#991b1b'}}>
+                          {feedback.message}
+                       </div>
+                    )}
+                    {isRevealed && feedback?.type === 'error' && (
+                       <button className="save-btn next-btn" onClick={() => updateSrs(false)} style={{background: '#ef4444', marginTop: '20px', padding: '10px 30px'}}>Tiếp tục</button>
+                    )}
+                  </>
                ) : (
-                  <button className="save-btn next-btn" onClick={nextChar} style={{background: '#10b981', marginTop: '20px'}}>Câu Tiếp Theo ➔</button>
+                  <div>
+                    {feedback ? feedback.message : 'Lỗi tạo câu hỏi.'}
+                    <button className="save-btn next-btn" onClick={nextChar} style={{background: '#3b82f6', marginTop: '20px'}}>Bỏ qua chữ này</button>
+                  </div>
                )}
-             </>
+             </div>
           )}
-        </div>
-      </div>
+        </>
+      )}
     </div>
   );
 }
