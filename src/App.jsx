@@ -880,6 +880,7 @@ function TongHopTab() {
   const [activeTab, setActiveTab] = useState('Tìm Kiếm');
   const [searchTerm, setSearchTerm] = useState('');
   const [targetCharToScroll, setTargetCharToScroll] = useState('');
+  const [renderTrigger, setRenderTrigger] = useState(0);
   
   const filteredData = useMemo(() => {
     if (activeTab === 'Tìm Kiếm') {
@@ -906,7 +907,7 @@ function TongHopTab() {
       const vB = parseFloat(b[col]);
       return (isNaN(vA) ? 0 : vA) - (isNaN(vB) ? 0 : vB);
     });
-  }, [activeTab, searchTerm]);
+  }, [activeTab, searchTerm, renderTrigger]);
 
   useEffect(() => {
      if (targetCharToScroll) {
@@ -926,6 +927,11 @@ function TongHopTab() {
       return;
     }
     const newSrs = { status: 'bat_dau', streak: 0 };
+    
+    // Optimistic UI Update
+    charObj.srs = newSrs; 
+    setRenderTrigger(v => v + 1);
+
     try {
       const res = await fetch('/api/save', {
         method: 'POST',
@@ -936,14 +942,14 @@ function TongHopTab() {
         })
       });
       const data = await res.json();
-      if (data.success) {
-        charObj.srs = newSrs; // update local
-        // force re-render
-        setActiveTab(prev => prev);
-      } else {
+      if (!data.success) {
+        charObj.srs = null; // Revert
+        setRenderTrigger(v => v + 1);
         alert('Lỗi lưu: ' + data.error);
       }
     } catch (err) {
+      charObj.srs = null; // Revert
+      setRenderTrigger(v => v + 1);
       alert('Lỗi kết nối: ' + err.message);
     }
   };
@@ -1029,10 +1035,11 @@ function LuyenTapTab({ setPrimaryTab, setActiveTab, setGlobalLookupTerm }) {
     { id: 'hoa', label: '🌸 Hoa' }
   ];
   const [activeTab, setLocalActiveTab] = useState('bat_dau');
+  const [renderTrigger, setRenderTrigger] = useState(0);
 
   const filteredData = useMemo(() => {
     return researchDataObj.filter(item => item.srs && item.srs.status === activeTab);
-  }, [activeTab]); // Ideally trigger on changes to srs, simple approach for now
+  }, [activeTab, renderTrigger]);
 
   const handleStudy = (char) => {
     setGlobalLookupTerm(char);
@@ -1041,7 +1048,13 @@ function LuyenTapTab({ setPrimaryTab, setActiveTab, setGlobalLookupTerm }) {
   };
 
   const handleMoveToReady = async (charObj) => {
+    const originalSrs = { ...charObj.srs };
     const newSrs = { ...charObj.srs, status: 'san_sang_thi' };
+    
+    // Optimistic UI Update
+    charObj.srs = newSrs;
+    setRenderTrigger(v => v + 1);
+
     try {
       const res = await fetch('/api/save', {
         method: 'POST',
@@ -1052,11 +1065,14 @@ function LuyenTapTab({ setPrimaryTab, setActiveTab, setGlobalLookupTerm }) {
         })
       });
       const data = await res.json();
-      if (data.success) {
-        charObj.srs = newSrs; // update local
-        setLocalActiveTab('bat_dau'); // trigger re-render hack
+      if (!data.success) {
+        charObj.srs = originalSrs; // Revert
+        setRenderTrigger(v => v + 1);
       }
-    } catch (err) {}
+    } catch (err) {
+      charObj.srs = originalSrs; // Revert
+      setRenderTrigger(v => v + 1);
+    }
   };
 
   return (
