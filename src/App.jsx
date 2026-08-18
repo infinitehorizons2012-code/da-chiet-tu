@@ -4,68 +4,7 @@ import './index.css'
 
 let researchDataObj = [];
 
-const mockDatabase = {
-  '妈': {
-    char: '妈',
-    pinyin: 'mā',
-    hanviet: 'MA',
-    meaning: 'Mẹ (Mother)',
-    mnemonic: 'Người phụ nữ (Nữ) làm lụng như ngựa (Mã) là mẹ.',
-    components: [
-      { type: 'Radical', char: '女', pinyin: 'nǚ', hanviet: 'NỮ', keyword: 'phụ nữ', color: '#2563eb', strokes: [0, 1, 2], imageUrl: '' },
-      { type: 'Phonetic', char: '马', pinyin: 'mǎ', hanviet: 'MÃ', keyword: 'ngựa', color: '#e11d48', strokes: [3, 4, 5], imageUrl: '' }
-    ]
-  },
-  '明': {
-    char: '明',
-    pinyin: 'míng',
-    hanviet: 'MINH',
-    meaning: 'Sáng sủa, rõ ràng',
-    mnemonic: 'Mặt trời (Nhật) và mặt trăng (Nguyệt) cùng chiếu sáng.',
-    components: [
-      { type: 'Radical', char: '日', pinyin: 'rì', hanviet: 'NHẬT', keyword: 'mặt trời', color: '#2563eb', strokes: [0, 1, 2, 3], imageUrl: '' },
-      { type: 'Component', char: '月', pinyin: 'yuè', hanviet: 'NGUYỆT', keyword: 'mặt trăng', color: '#e11d48', strokes: [4, 5, 6, 7], imageUrl: '' }
-    ]
-  },
-  '南': {
-    char: '南',
-    pinyin: 'nán',
-    hanviet: 'NAM',
-    meaning: 'hướng Nam',
-    mnemonic: '10 vùng biên giới nuôi dê ở hướng Nam',
-    components: [
-      { type: 'Radical', char: '十', pinyin: 'shí', hanviet: 'THẬP', keyword: '10', color: '#2563eb', strokes: [0, 1], imageUrl: '' },
-      { type: 'Component', char: '冂', pinyin: 'jiōng', hanviet: 'QUYNH', keyword: 'biên giới', color: '#e11d48', strokes: [2, 3], imageUrl: '' },
-      { type: 'Component', char: '𢆉', pinyin: 'yáng', hanviet: 'Dê cụt đuôi', keyword: 'dê', color: '#059669', strokes: [4, 5, 6, 7, 8], imageUrl: '' }
-    ]
-  },
-  '茶': {
-    char: '茶',
-    pinyin: 'chá',
-    hanviet: 'TRÀ',
-    meaning: 'trà, chè',
-    mnemonic: 'Con người (Nhân) nhặt lá cỏ (Thảo) mọc trên cây (Mộc) để làm trà.',
-    components: [
-      { type: 'Radical', char: '艹', pinyin: 'cǎo', hanviet: 'THẢO', keyword: 'cỏ', color: '#2563eb', strokes: [0, 1, 2], imageUrl: '' },
-      { type: 'Component', char: '人', pinyin: 'rén', hanviet: 'NHÂN', keyword: 'con người', color: '#e11d48', strokes: [3, 4], imageUrl: '' },
-      { type: 'Component', char: '木', pinyin: 'mù', hanviet: 'MỘC', keyword: 'cây', color: '#059669', strokes: [5, 6, 7, 8], imageUrl: '' }
-    ]
-  },
-  '德': {
-    char: '德',
-    pinyin: 'dé',
-    hanviet: 'ĐỨC',
-    meaning: 'Đạo đức, ân đức',
-    mnemonic: 'Hành động (彳) quang minh, dù mười (十) con mắt (罒/目) soi xét vẫn giữ một (一) tấm lòng (心) ngay thẳng (Thập Mục Nhất Tâm).',
-    components: [
-      { type: 'Radical', char: '彳', pinyin: 'chì', hanviet: 'XÍCH', keyword: 'hành động', color: '#3b82f6', strokes: [0, 1, 2], imageUrl: '' },
-      { type: 'Component', char: '十', pinyin: 'shí', hanviet: 'THẬP', keyword: 'mười', color: '#10b981', strokes: [3, 4], imageUrl: '' },
-      { type: 'Component', char: '罒', pinyin: 'mù', hanviet: 'MỤC (Mắt)', keyword: 'con mắt', color: '#eab308', strokes: [5, 6, 7, 8, 9], imageUrl: '' },
-      { type: 'Component', char: '一', pinyin: 'yī', hanviet: 'NHẤT', keyword: 'một', color: '#a855f7', strokes: [10], imageUrl: '' },
-      { type: 'Component', char: '心', pinyin: 'xīn', hanviet: 'TÂM', keyword: 'tấm lòng', color: '#ef4444', strokes: [11, 12, 13, 14], imageUrl: '' }
-    ]
-  }
-}
+
 
 function Header() {
   return (
@@ -172,7 +111,7 @@ function HanziDisplay({ char, components }) {
 
 function LookupTab() {
   const [searchTerm, setSearchTerm] = useState('')
-  const [result, setResult] = useState(mockDatabase['南'])
+  const [result, setResult] = useState(null)
   const [error, setError] = useState('')
 
   const handleSearch = async (e) => {
@@ -256,9 +195,6 @@ function LookupTab() {
         console.error("Lỗi khi tải dữ liệu nét chữ:", err);
       }
 
-    } else if (mockDatabase[char]) {
-      setResult(mockDatabase[char])
-      setError('')
     } else {
       setError(`Chưa có dữ liệu cho chữ "${char}".`)
     }
