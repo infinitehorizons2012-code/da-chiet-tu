@@ -458,6 +458,10 @@ body {
   color: var(--text-primary);
 }
 
+.dropdown-item:hover {
+  background-color: #f1f5f9;
+}
+
 .tab-btn.active {
   background-color: var(--accent-red);
   color: white;

@@ -868,7 +868,7 @@ function ChietTuAdminTab({ globalLookupTerm, setGlobalLookupTerm }) {
 }
 
 function TongHopTab() {
-  const tabs = ['Tìm Kiếm', '9000', 'HSK1', 'HSK2', 'HSK3', 'HSK4', 'HSK5', 'HSK6', 'Chữ Nho', 'Chỉ Âm', '214 Bộ Thủ', 'Từ Ghép'];
+  const hskTabs = ['HSK1', 'HSK2', 'HSK3', 'HSK4', 'HSK5', 'HSK6'];
   const colMap = {
     '9000': '9000',
     'HSK1': 'HSK1', 'HSK2': 'HSK2', 'HSK3': 'HSK3', 'HSK4': 'HSK4', 'HSK5': 'HSK5', 'HSK6': 'HSK6',
@@ -881,6 +881,7 @@ function TongHopTab() {
   const [searchTerm, setSearchTerm] = useState('');
   const [targetCharToScroll, setTargetCharToScroll] = useState('');
   const [renderTrigger, setRenderTrigger] = useState(0);
+  const [showHskMenu, setShowHskMenu] = useState(false);
   
   const filteredData = useMemo(() => {
     if (activeTab === 'Tìm Kiếm') {
@@ -969,11 +970,28 @@ function TongHopTab() {
   return (
     <div className="tonghop-tab">
       <div className="tab-navigation">
-        {tabs.map(tab => (
-           <button key={tab} className={`tab-btn ${activeTab === tab ? 'active' : ''}`} onClick={() => setActiveTab(tab)}>
-             {tab}
+         <button className={`tab-btn ${activeTab === 'Tìm Kiếm' ? 'active' : ''}`} onClick={() => setActiveTab('Tìm Kiếm')}>Tìm Kiếm</button>
+         <button className={`tab-btn ${activeTab === '9000' ? 'active' : ''}`} onClick={() => setActiveTab('9000')}>9000</button>
+         
+         <div className="tab-dropdown" onMouseEnter={() => setShowHskMenu(true)} onMouseLeave={() => setShowHskMenu(false)} style={{position: 'relative'}}>
+           <button className={`tab-btn ${activeTab.startsWith('HSK') ? 'active' : ''}`}>
+             {activeTab.startsWith('HSK') ? activeTab : 'HSK'} ▾
            </button>
-        ))}
+           {showHskMenu && (
+             <div className="dropdown-menu" style={{position: 'absolute', top: '100%', left: 0, backgroundColor: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', zIndex: 100, minWidth: '100px', padding: '5px 0'}}>
+               {hskTabs.map(hsk => (
+                 <div key={hsk} className="dropdown-item" onClick={() => { setActiveTab(hsk); setShowHskMenu(false); }} style={{padding: '10px 20px', cursor: 'pointer', color: '#334155'}}>
+                   {hsk}
+                 </div>
+               ))}
+             </div>
+           )}
+         </div>
+
+         <button className={`tab-btn ${activeTab === 'Chữ Nho' ? 'active' : ''}`} onClick={() => setActiveTab('Chữ Nho')}>Chữ Nho</button>
+         <button className={`tab-btn ${activeTab === 'Chỉ Âm' ? 'active' : ''}`} onClick={() => setActiveTab('Chỉ Âm')}>Chỉ Âm</button>
+         <button className={`tab-btn ${activeTab === '214 Bộ Thủ' ? 'active' : ''}`} onClick={() => setActiveTab('214 Bộ Thủ')}>214 Bộ Thủ</button>
+         <button className={`tab-btn ${activeTab === 'Từ Ghép' ? 'active' : ''}`} onClick={() => setActiveTab('Từ Ghép')}>Từ Ghép</button>
       </div>
       <div className="tonghop-list">
         {activeTab === 'Tìm Kiếm' && (
