@@ -176,15 +176,64 @@ function LookupTab() {
   const [error, setError] = useState('')
 
   const handleSearch = (e) => {
-    e.preventDefault()
+    if (e) e.preventDefault()
     const char = searchTerm.trim()
     if (!char) return
     
-    if (mockDatabase[char]) {
+    const researchData = researchDataObj.find(item => item['Chữ Trung Quốc'] === char);
+
+    if (researchData) {
+      const newResult = {
+        char: researchData['Chữ Trung Quốc'],
+        pinyin: researchData['Pinyin_Xie'] || '',
+        hanviet: researchData['Âm Hán Việt_Xie'] || '',
+        meaning: researchData['Nghĩa Tiếng Việt_Xie'] || '',
+        mnemonic: researchData['App_Mnemonic'] || '',
+        components: []
+      };
+
+      const colors = ['#2563eb', '#e11d48', '#059669', '#eab308', '#a855f7', '#10b981'];
+      let compIndex = 0;
+      for (let i = 1; i <= 12; i++) {
+        const compStr = researchData[`App_Comp_${i}`];
+        if (compStr && compStr !== 'nan' && compStr.trim() !== '') {
+          // Parse format like "白 Bạch (106)"
+          const match = compStr.trim().match(/^([^\s]+)\s+([^\(]+?)\s*\((.+?)\)$/);
+          if (match) {
+            newResult.components.push({
+              type: i === 1 ? 'Radical' : 'Component',
+              char: match[1],
+              hanviet: match[2].trim(),
+              keyword: match[3].trim(),
+              color: colors[compIndex % colors.length],
+              strokes: [], 
+              imageUrl: ''
+            });
+          } else {
+             const parts = compStr.trim().split(' ');
+             const c = parts[0] || '';
+             const hv = parts.slice(1).join(' ') || '';
+             newResult.components.push({
+              type: i === 1 ? 'Radical' : 'Component',
+              char: c,
+              hanviet: hv,
+              keyword: hv,
+              color: colors[compIndex % colors.length],
+              strokes: [], 
+              imageUrl: ''
+            });
+          }
+          compIndex++;
+        }
+      }
+
+      setResult(newResult);
+      setError('');
+    } else if (mockDatabase[char]) {
       setResult(mockDatabase[char])
       setError('')
     } else {
-      setError(`Chưa có dữ liệu cho chữ "${char}". Thử các chữ: 妈, 明, 南, 茶, 德.`)
+      setError(`Chưa có dữ liệu cho chữ "${char}".`)
     }
   }
 
@@ -404,7 +453,7 @@ function ResearchTab() {
                    <button className="save-btn" onClick={handleSave} disabled={isSaving || Object.keys(editData).length === 0}>
                      {isSaving ? 'Đang lưu...' : 'Lưu thay đổi'}
                    </button>
-                   {saveStatus && <span className="save-status">{saveStatus}</span>}
+                   {saveStatus && saveStatus !== 'Đang lưu...' && <span className="save-status">{saveStatus}</span>}
                  </div>
                )}
              </div>

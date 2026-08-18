@@ -31,22 +31,20 @@ function saveExcelPlugin() {
                 }
               }
 
-              // 2. Call python script to update Excel
+              // 2. Call python script to update Excel in the background
               const pythonScript = path.resolve('C:\\Users\\DT.HANG\\.gemini\\antigravity\\brain\\9845be2f-b523-4b6b-ac52-eff1c0ade0c7\\scratch\\update_excel.py');
-              // use spawn or exec
               const child = exec(`python "${pythonScript}"`, { env: { ...process.env, PYTHONIOENCODING: 'utf-8' } }, (error, stdout, stderr) => {
                 if (error) {
-                  console.error(`exec error: ${error}`);
-                  res.statusCode = 500;
-                  res.end(JSON.stringify({ success: false, error: error.message }));
-                  return;
+                  console.error(`Lỗi khi lưu Excel: ${error}`);
                 }
-                res.setHeader('Content-Type', 'application/json');
-                res.end(stdout);
               });
               
               child.stdin.write(body);
               child.stdin.end();
+
+              // Return success immediately to UI, do not wait for openpyxl (which takes ~20s)
+              res.setHeader('Content-Type', 'application/json');
+              res.end(JSON.stringify({ success: true }));
             } catch (err) {
               res.statusCode = 500;
               res.end(JSON.stringify({ success: false, error: err.message }));
