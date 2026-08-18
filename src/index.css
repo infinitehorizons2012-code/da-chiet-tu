@@ -713,3 +713,9 @@ body {
 .inner-tab { padding: 6px 16px; border: none; background: transparent; font-weight: 600; color: #64748b; cursor: pointer; border-radius: 20px; transition: 0.2s; white-space: nowrap; }
 .inner-tab:hover { background: #f1f5f9; color: #0f172a; }
 .inner-tab.active { background: #e11d48; color: white; }
+
+.detail-meaning {
+  font-size: 1.1rem;
+  color: var(--text-primary);
+  margin-top: 8px;
+}

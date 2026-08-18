@@ -408,10 +408,9 @@ function ResearchTab({ setGlobalLookupTerm }) {
     });
   };
 
-  const DETAIL_TABS = ['Ứng dụng', 'Chữ Nho', 'Master', 'Xie', 'GavinGrover', 'CHISE', 'Unihan', 'Jun Da', 'Khác'];
+  const DETAIL_TABS = ['Ứng dụng', 'Chữ Nho', 'Xie', 'GavinGrover', 'CHISE', 'Unihan', 'Jun Da', 'Khác'];
   const getTabForKey = (key) => {
     if (key.startsWith('App_')) return 'Ứng dụng';
-    if (key.includes('Master')) return 'Master';
     if (key.includes('_Xie')) return 'Xie';
     if (key.includes('GavinGrover')) return 'GavinGrover';
     if (key.includes('CHISE')) return 'CHISE';
@@ -481,6 +480,7 @@ function ResearchTab({ setGlobalLookupTerm }) {
              <div className="detail-header">
                 <div className="detail-header-char">{selectedChar['Chữ Trung Quốc']}</div>
                 <div className="detail-pinyin">{selectedChar['Pinyin_Master (Pinyin Chuẩn Tổng Hợp 100%)']} - {selectedChar['Âm Hán Việt (Master 100%)']}</div>
+                <div className="detail-meaning">{selectedChar['Nghĩa Tiếng Việt (Master 100%)']}</div>
              </div>
 
              <div className="detail-inner-tabs">
@@ -497,7 +497,7 @@ function ResearchTab({ setGlobalLookupTerm }) {
 
              <div className="detail-grid">
                {Object.keys(selectedChar).map((key, idx) => {
-                 if (key === 'Chữ Trung Quốc' || key === 'Pinyin_Master (Pinyin Chuẩn Tổng Hợp 100%)' || key === 'Âm Hán Việt (Master 100%)') return null;
+                 if (key === 'Chữ Trung Quốc' || key === 'Pinyin_Master (Pinyin Chuẩn Tổng Hợp 100%)' || key === 'Âm Hán Việt (Master 100%)' || key === 'Nghĩa Tiếng Việt (Master 100%)') return null;
                  
                  // Lọc theo tab hiện tại
                  if (getTabForKey(key) !== detailTab) return null;
