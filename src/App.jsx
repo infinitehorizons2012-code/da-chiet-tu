@@ -408,15 +408,17 @@ function ResearchTab({ setGlobalLookupTerm }) {
     });
   };
 
-  const DETAIL_TABS = ['Ứng dụng', 'Chữ Nho', 'Xie', 'GavinGrover', 'CHISE', 'Unihan', 'Jun Da', 'Khác'];
+  const DETAIL_TABS = ['Ứng dụng', 'Chữ Nho', 'Xie', 'GavinGrover', 'CHISE', 'Unihan', 'CC-CEDICT', 'Jun Da', 'Phân loại', 'Khác'];
   const getTabForKey = (key) => {
     if (key.startsWith('App_')) return 'Ứng dụng';
     if (key.includes('_Xie')) return 'Xie';
     if (key.includes('GavinGrover')) return 'GavinGrover';
     if (key.includes('CHISE')) return 'CHISE';
     if (key.includes('Unihan')) return 'Unihan';
+    if (key.includes('CC-CEDICT')) return 'CC-CEDICT';
     if (key.includes('ChuNhoTongHop') || key === 'STT Chữ Nho Tổng Hợp') return 'Chữ Nho';
     if (key.includes('Jun Da')) return 'Jun Da';
+    if (key.includes('HSK') || key === '9000' || key.toLowerCase().includes('group') || key.includes('words')) return 'Phân loại';
     return 'Khác';
   };
 
