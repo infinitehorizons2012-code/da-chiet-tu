@@ -264,6 +264,43 @@ function ResearchTab() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedChar, setSelectedChar] = useState(null);
   const [history, setHistory] = useState([]);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveStatus, setSaveStatus] = useState('');
+  const [editData, setEditData] = useState({});
+
+  useEffect(() => {
+    setEditData({});
+    setSaveStatus('');
+  }, [selectedChar]);
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    setSaveStatus('Đang lưu...');
+    try {
+      const res = await fetch('/api/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          char: selectedChar['Chữ Trung Quốc'],
+          comps: editData
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSaveStatus('Đã lưu thành công!');
+        Object.assign(selectedChar, editData);
+      } else {
+        setSaveStatus('Lỗi: ' + data.error);
+      }
+    } catch (err) {
+      setSaveStatus('Lỗi kết nối.');
+    }
+    setIsSaving(false);
+  };
+
+  const handleEditChange = (key, val) => {
+    setEditData(prev => ({ ...prev, [key]: val }));
+  };
 
   const charMap = useMemo(() => {
     const map = new Map();
@@ -351,11 +388,21 @@ function ResearchTab() {
       <div className="research-detail">
         {selectedChar ? (
           <div className="research-detail-content">
-             {history.length > 0 && (
-               <button className="back-btn" onClick={handleBack}>
-                 ← Quay lại
-               </button>
-             )}
+             <div className="detail-actions-top">
+               {history.length > 0 && (
+                 <button className="back-btn" onClick={handleBack}>
+                   ← Quay lại
+                 </button>
+               )}
+               {Object.keys(selectedChar).some(k => k.startsWith('App_Comp_')) && (
+                 <div className="save-container">
+                   <button className="save-btn" onClick={handleSave} disabled={isSaving || Object.keys(editData).length === 0}>
+                     {isSaving ? 'Đang lưu...' : 'Lưu thay đổi'}
+                   </button>
+                   {saveStatus && <span className="save-status">{saveStatus}</span>}
+                 </div>
+               )}
+             </div>
              <div className="detail-header">
                 <div className="detail-header-char">{selectedChar['Chữ Trung Quốc']}</div>
                 <div className="detail-pinyin">{selectedChar['Pinyin_Xie']} - {selectedChar['Âm Hán Việt_Xie']}</div>
@@ -363,11 +410,23 @@ function ResearchTab() {
              <div className="detail-grid">
                {Object.keys(selectedChar).map((key, idx) => {
                  if (key === 'Chữ Trung Quốc' || key === 'Pinyin_Xie' || key === 'Âm Hán Việt_Xie') return null;
-                 if (!selectedChar[key] || selectedChar[key] === 'nan') return null;
+                 const isEditable = key.startsWith('App_Comp_');
+                 const val = isEditable && editData[key] !== undefined ? editData[key] : selectedChar[key];
+                 if (!isEditable && (!val || val === 'nan')) return null;
+                 
                  return (
                    <div className="detail-card" key={idx}>
                      <div className="detail-card-title">{key}</div>
-                     <div className="detail-card-value">{renderClickableValue(selectedChar[key])}</div>
+                     {isEditable ? (
+                       <textarea 
+                         className="detail-card-textarea"
+                         value={val !== 'nan' && val ? val : ''}
+                         onChange={(e) => handleEditChange(key, e.target.value)}
+                         placeholder="Nhập nội dung..."
+                       />
+                     ) : (
+                       <div className="detail-card-value">{renderClickableValue(val)}</div>
+                     )}
                    </div>
                  )
                })}

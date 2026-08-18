@@ -640,3 +640,69 @@ body {
   color: var(--accent-red);
   text-decoration: underline;
 }
+
+.detail-actions-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.detail-actions-top .back-btn {
+  margin-bottom: 0;
+}
+
+.save-container {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.save-btn {
+  background-color: var(--accent-red);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.save-btn:hover:not(:disabled) {
+  background-color: #b91c1c;
+  transform: translateY(-1px);
+}
+
+.save-btn:disabled {
+  background-color: #fca5a5;
+  cursor: not-allowed;
+}
+
+.save-status {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.detail-card-textarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  resize: vertical;
+  background-color: #fafafa;
+  color: var(--text-primary);
+  transition: border-color 0.2s;
+}
+
+.detail-card-textarea:focus {
+  outline: none;
+  border-color: var(--accent-red);
+  background-color: white;
+}
