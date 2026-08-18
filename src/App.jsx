@@ -1134,6 +1134,8 @@ function TracNghiemTab() {
   const [feedback, setFeedback] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  const [isRevealed, setIsRevealed] = useState(false);
+
   useEffect(() => {
      const eligible = researchDataObj.filter(item => {
         const status = item.srs?.status;
@@ -1154,6 +1156,7 @@ function TracNghiemTab() {
     setFeedback(null);
     setStrokeColors({});
     setActiveComp(null);
+    setIsRevealed(false);
     const char = charObj['Chữ Trung Quốc'];
     
     const comps = [];
@@ -1196,17 +1199,7 @@ function TracNghiemTab() {
   };
 
   const handleStrokeClick = (strokeIndex) => {
-    if (!activeComp || feedback?.type === 'success') return;
-    
-    setStrokeColors(prev => {
-      const next = { ...prev };
-      if (next[strokeIndex] === activeComp.color) {
-        delete next[strokeIndex];
-      } else {
-        next[strokeIndex] = activeComp.color;
-      }
-      return next;
-    });
+    // Không cho phép tương tác tô màu thủ công nữa theo yêu cầu flashcard
   };
 
   const updateSrs = async (isCorrect) => {
@@ -1240,6 +1233,8 @@ function TracNghiemTab() {
        });
        currentChar.srs = srs;
      } catch(e) {}
+     
+     nextChar();
   };
 
   const checkAnswer = () => {
@@ -1247,45 +1242,22 @@ function TracNghiemTab() {
     const mapping = currentChar.quiz_mapping;
     if (!mapping) {
        setFeedback({ type: 'error', message: 'Chữ này chưa có đáp án trên hệ thống! Vui lòng nhờ admin tạo đáp án trước.'});
-       updateSrs(false); // Coi như sai tạm thời hoặc bỏ qua
+       setIsRevealed(true);
        return;
     }
 
-    const userMapping = {};
-    Object.entries(strokeColors).forEach(([strokeIdxStr, color]) => {
-      const strokeIdx = parseInt(strokeIdxStr, 10);
-      const comp = currentChar.parsedComps.find(c => c.color === color);
-      if (comp) {
-        if (!userMapping[comp.id]) userMapping[comp.id] = [];
-        userMapping[comp.id].push(strokeIdx);
-      }
-    });
-
-    Object.keys(userMapping).forEach(k => userMapping[k].sort((a,b)=>a-b));
-
-    let isCorrect = true;
+    // Tự động tô màu đáp án
+    const correctColors = {};
     for (const compId in mapping) {
-       const dbStrokes = mapping[compId];
-       const userStrokes = userMapping[compId] || [];
-       if (dbStrokes.length !== userStrokes.length || !dbStrokes.every((v,i) => v === userStrokes[i])) {
-          isCorrect = false; break;
+       const comp = currentChar.parsedComps.find(c => c.id === compId);
+       if (comp) {
+          mapping[compId].forEach(idx => {
+             correctColors[idx] = comp.color;
+          });
        }
     }
-    for (const compId in userMapping) {
-       const userStrokes = userMapping[compId];
-       const dbStrokes = mapping[compId] || [];
-       if (dbStrokes.length !== userStrokes.length || !dbStrokes.every((v,i) => v === userStrokes[i])) {
-          isCorrect = false; break;
-       }
-    }
-
-    if (isCorrect) {
-       setFeedback({ type: 'success', message: 'Chính xác! Bạn đã hiểu cấu tạo chữ này.' });
-       updateSrs(true);
-    } else {
-       setFeedback({ type: 'error', message: 'Chưa chính xác! Sai linh kiện.' });
-       updateSrs(false);
-    }
+    setStrokeColors(correctColors);
+    setIsRevealed(true);
   };
 
   const nextChar = () => {
@@ -1325,7 +1297,6 @@ function TracNghiemTab() {
                   d={path} 
                   className="hanzi-stroke-path"
                   fill={strokeColors[idx] || '#cbd5e1'} 
-                  onClick={() => handleStrokeClick(idx)}
                 />
               ))}
             </g>
@@ -1337,27 +1308,40 @@ function TracNghiemTab() {
           )}
         </div>
         
-        <div className="chiettu-components-panel">
-          <h3>Các linh kiện ({currentChar['Chữ Trung Quốc']})</h3>
-          <p style={{fontSize: '0.9rem', color: '#64748b', marginBottom: '15px'}}>Chọn màu cọ và tô vào các nét bên trái</p>
-          <div className="comp-list">
-            {currentChar.parsedComps.map(comp => (
-              <div 
-                key={comp.id}
-                className={`comp-item ${activeComp && activeComp.id === comp.id ? 'active' : ''}`}
-                style={{ borderLeftColor: comp.color }}
-                onClick={() => setActiveComp(comp)}
-              >
-                <div className="comp-color-box" style={{ backgroundColor: comp.color }}></div>
-                <span className="comp-text">{comp.text}</span>
-              </div>
-            ))}
-          </div>
-          
-          {!feedback ? (
-             <button className="save-btn" onClick={checkAnswer} style={{background: '#3b82f6'}}>Kiểm Tra</button>
+        <div className="chiettu-components-panel" style={{display: 'flex', flexDirection: 'column', justifyContent: 'center'}}>
+          {!isRevealed ? (
+             <div style={{textAlign: 'center'}}>
+               <h3 style={{marginBottom: '20px', color: '#64748b'}}>Hãy tự ghi ra nháp các linh kiện của chữ này</h3>
+               <button className="save-btn" onClick={checkAnswer} style={{background: '#3b82f6', fontSize: '1.2rem', padding: '15px 30px', width: '100%'}}>Kiểm tra đối chiếu</button>
+             </div>
           ) : (
-             <button className="save-btn next-btn" onClick={nextChar} style={{background: '#10b981'}}>Câu Tiếp Theo ➔</button>
+             <>
+               <h3>Đáp án: Các linh kiện ({currentChar['Chữ Trung Quốc']})</h3>
+               <div className="comp-list">
+                 {currentChar.parsedComps.map(comp => (
+                   <div 
+                     key={comp.id}
+                     className="comp-item"
+                     style={{ borderLeftColor: comp.color }}
+                   >
+                     <div className="comp-color-box" style={{ backgroundColor: comp.color }}></div>
+                     <span className="comp-text">{comp.text}</span>
+                   </div>
+                 ))}
+               </div>
+               
+               {!feedback ? (
+                  <div style={{marginTop: '30px'}}>
+                     <h4 style={{textAlign: 'center', marginBottom: '15px'}}>Bạn làm đúng chứ?</h4>
+                     <div style={{display: 'flex', gap: '15px'}}>
+                        <button className="save-btn" onClick={() => updateSrs(false)} style={{background: '#ef4444', flex: 1}}>Sai (Làm lại sau)</button>
+                        <button className="save-btn" onClick={() => updateSrs(true)} style={{background: '#10b981', flex: 1}}>Đúng (Lên cấp)</button>
+                     </div>
+                  </div>
+               ) : (
+                  <button className="save-btn next-btn" onClick={nextChar} style={{background: '#10b981', marginTop: '20px'}}>Câu Tiếp Theo ➔</button>
+               )}
+             </>
           )}
         </div>
       </div>
