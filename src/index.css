@@ -706,3 +706,6 @@ body {
   border-color: var(--accent-red);
   background-color: white;
 }
+.sidebar-tabs { display: flex; margin: 0 16px 8px 16px; background: #f1f5f9; border-radius: 6px; padding: 4px; }
+.sidebar-tab { flex: 1; border: none; background: transparent; padding: 6px 0; font-size: 0.85rem; font-weight: 500; color: #64748b; cursor: pointer; border-radius: 4px; transition: all 0.2s; }
+.sidebar-tab.active { background: white; color: #e11d48; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }

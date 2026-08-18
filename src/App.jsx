@@ -338,6 +338,7 @@ function LookupTab() {
 
 function ResearchTab() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [sortMode, setSortMode] = useState('frequency');
   const [selectedChar, setSelectedChar] = useState(null);
   const [history, setHistory] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
@@ -412,14 +413,29 @@ function ResearchTab() {
   };
 
   const filteredData = useMemo(() => {
-    if (!searchTerm.trim()) return researchDataObj;
+    let baseData = researchDataObj;
+    
+    if (sortMode === 'chunho') {
+      baseData = [...researchDataObj].sort((a, b) => {
+        const valA = parseFloat(a['ChuNhoTongHop_STT (Giáo trình Chữ Nho)']);
+        const valB = parseFloat(b['ChuNhoTongHop_STT (Giáo trình Chữ Nho)']);
+        const validA = !isNaN(valA);
+        const validB = !isNaN(valB);
+        if (validA && validB) return valA - valB;
+        if (validA) return -1;
+        if (validB) return 1;
+        return 0;
+      });
+    }
+
+    if (!searchTerm.trim()) return baseData;
     const lower = searchTerm.toLowerCase();
-    return researchDataObj.filter(item => {
+    return baseData.filter(item => {
       return (item['Chữ Trung Quốc'] && item['Chữ Trung Quốc'].includes(lower)) || 
              (item['Pinyin_Xie'] && item['Pinyin_Xie'].toLowerCase().includes(lower)) ||
              (item['Âm Hán Việt_Xie'] && item['Âm Hán Việt_Xie'].toLowerCase().includes(lower))
     });
-  }, [searchTerm]);
+  }, [searchTerm, sortMode]);
 
   const renderClickableValue = (val) => {
     if (typeof val !== 'string') return val;
@@ -451,6 +467,20 @@ function ResearchTab() {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
+        </div>
+        <div className="sidebar-tabs">
+          <button 
+            className={`sidebar-tab ${sortMode === 'frequency' ? 'active' : ''}`}
+            onClick={() => setSortMode('frequency')}
+          >
+            Tần suất
+          </button>
+          <button 
+            className={`sidebar-tab ${sortMode === 'chunho' ? 'active' : ''}`}
+            onClick={() => setSortMode('chunho')}
+          >
+            Giáo trình
+          </button>
         </div>
         <div className="research-list">
           {filteredData.slice(0, 500).map((item, idx) => (
