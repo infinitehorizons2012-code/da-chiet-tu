@@ -285,6 +285,9 @@ function ResearchTab() {
           comps: editData
         })
       });
+      if (!res.ok) {
+        throw new Error(`Mã lỗi HTTP: ${res.status}`);
+      }
       const data = await res.json();
       if (data.success) {
         setSaveStatus('Đã lưu thành công!');
@@ -293,7 +296,7 @@ function ResearchTab() {
         setSaveStatus('Lỗi: ' + data.error);
       }
     } catch (err) {
-      setSaveStatus('Lỗi kết nối.');
+      setSaveStatus('Lỗi kết nối: ' + err.message);
     }
     setIsSaving(false);
   };
@@ -301,6 +304,8 @@ function ResearchTab() {
   const handleEditChange = (key, val) => {
     setEditData(prev => ({ ...prev, [key]: val }));
   };
+
+  const isFieldEditable = (key) => key.startsWith('App_Comp_') || key === 'App_Mnemonic';
 
   const charMap = useMemo(() => {
     const map = new Map();
@@ -394,7 +399,7 @@ function ResearchTab() {
                    ← Quay lại
                  </button>
                )}
-               {Object.keys(selectedChar).some(k => k.startsWith('App_Comp_')) && (
+               {Object.keys(selectedChar).some(isFieldEditable) && (
                  <div className="save-container">
                    <button className="save-btn" onClick={handleSave} disabled={isSaving || Object.keys(editData).length === 0}>
                      {isSaving ? 'Đang lưu...' : 'Lưu thay đổi'}
@@ -410,7 +415,7 @@ function ResearchTab() {
              <div className="detail-grid">
                {Object.keys(selectedChar).map((key, idx) => {
                  if (key === 'Chữ Trung Quốc' || key === 'Pinyin_Xie' || key === 'Âm Hán Việt_Xie') return null;
-                 const isEditable = key.startsWith('App_Comp_');
+                 const isEditable = isFieldEditable(key);
                  const val = isEditable && editData[key] !== undefined ? editData[key] : selectedChar[key];
                  if (!isEditable && (!val || val === 'nan')) return null;
                  
