@@ -295,7 +295,7 @@ function LookupTab({ globalLookupTerm, setGlobalLookupTerm }) {
   )
 }
 
-function ResearchTab({ setGlobalLookupTerm }) {
+function ResearchTab({ globalLookupTerm, setGlobalLookupTerm }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortMode, setSortMode] = useState('frequency');
   const [selectedChar, setSelectedChar] = useState(null);
@@ -351,6 +351,15 @@ function ResearchTab({ setGlobalLookupTerm }) {
     });
     return map;
   }, []);
+
+  useEffect(() => {
+    if (globalLookupTerm) {
+      const match = charMap.get(globalLookupTerm);
+      if (match && (!selectedChar || selectedChar['Chữ Trung Quốc'] !== globalLookupTerm)) {
+        setSelectedChar(match);
+      }
+    }
+  }, [globalLookupTerm, charMap, selectedChar]);
 
   const handleSidebarSelect = (charObj) => {
     setHistory([]);
@@ -621,7 +630,7 @@ function App() {
           </div>
           
           {activeTab === 'lookup' && <LookupTab globalLookupTerm={globalLookupTerm} setGlobalLookupTerm={setGlobalLookupTerm} />}
-          {activeTab === 'research' && <ResearchTab setGlobalLookupTerm={setGlobalLookupTerm} />}
+          {activeTab === 'research' && <ResearchTab globalLookupTerm={globalLookupTerm} setGlobalLookupTerm={setGlobalLookupTerm} />}
           {activeTab === 'chiettu' && <ChietTuAdminTab globalLookupTerm={globalLookupTerm} setGlobalLookupTerm={setGlobalLookupTerm} />}
         </>
       )}
