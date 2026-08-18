@@ -814,7 +814,8 @@ body {
 }
 
 .tonghop-list { display: flex; flex-direction: column; gap: 10px; max-width: 800px; margin: 0 auto; padding: 20px; }
-.tonghop-item { display: flex; align-items: center; background: white; padding: 10px 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+.tonghop-item { display: flex; align-items: center; background: white; padding: 10px 20px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); transition: all 0.3s ease; }
+.tonghop-item.highlighted-item { border: 2px solid #10b981; box-shadow: 0 0 10px rgba(16, 185, 129, 0.3); transform: scale(1.02); }
 .tonghop-index { font-size: 1.2rem; font-weight: bold; color: #94a3b8; width: 40px; text-align: center; border-right: 1px solid #e2e8f0; margin-right: 15px; }
 .tonghop-char { font-size: 2rem; font-weight: bold; color: #e11d48; width: 60px; text-align: center; }
 .tonghop-info { flex: 1; display: flex; flex-direction: column; }

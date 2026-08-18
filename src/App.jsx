@@ -868,7 +868,7 @@ function ChietTuAdminTab({ globalLookupTerm, setGlobalLookupTerm }) {
 }
 
 function TongHopTab() {
-  const tabs = ['9000', 'HSK1', 'HSK2', 'HSK3', 'HSK4', 'HSK5', 'HSK6', 'Chữ Nho', 'Chỉ Âm', '214 Bộ Thủ', 'Từ Ghép'];
+  const tabs = ['Tìm Kiếm', '9000', 'HSK1', 'HSK2', 'HSK3', 'HSK4', 'HSK5', 'HSK6', 'Chữ Nho', 'Chỉ Âm', '214 Bộ Thủ', 'Từ Ghép'];
   const colMap = {
     '9000': '9000',
     'HSK1': 'HSK1', 'HSK2': 'HSK2', 'HSK3': 'HSK3', 'HSK4': 'HSK4', 'HSK5': 'HSK5', 'HSK6': 'HSK6',
@@ -877,9 +877,21 @@ function TongHopTab() {
     '214 Bộ Thủ': 'group2',
     'Từ Ghép': 'Số thứ tự words'
   };
-  const [activeTab, setActiveTab] = useState('HSK1');
+  const [activeTab, setActiveTab] = useState('Tìm Kiếm');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [targetCharToScroll, setTargetCharToScroll] = useState('');
   
   const filteredData = useMemo(() => {
+    if (activeTab === 'Tìm Kiếm') {
+        if (!searchTerm.trim()) return [];
+        const term = searchTerm.toLowerCase();
+        return researchDataObj.filter(item => {
+           return (item['Chữ Trung Quốc'] && item['Chữ Trung Quốc'].includes(term)) ||
+                  (item['Pinyin_Master (Pinyin Chuẩn Tổng Hợp 100%)'] && item['Pinyin_Master (Pinyin Chuẩn Tổng Hợp 100%)'].toLowerCase().includes(term)) ||
+                  (item['Âm Hán Việt (Master 100%)'] && item['Âm Hán Việt (Master 100%)'].toLowerCase().includes(term)) ||
+                  (item['Nghĩa Tiếng Việt (Master 100%)'] && item['Nghĩa Tiếng Việt (Master 100%)'].toLowerCase().includes(term));
+        }).slice(0, 100);
+    }
     const col = colMap[activeTab];
     return researchDataObj.filter(item => {
       const val = item[col];
@@ -894,7 +906,18 @@ function TongHopTab() {
       const vB = parseFloat(b[col]);
       return (isNaN(vA) ? 0 : vA) - (isNaN(vB) ? 0 : vB);
     });
-  }, [activeTab]);
+  }, [activeTab, searchTerm]);
+
+  useEffect(() => {
+     if (targetCharToScroll) {
+        setTimeout(() => {
+           const el = document.getElementById(`tonghop-item-${targetCharToScroll}`);
+           if (el) {
+              el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+           }
+        }, 100);
+     }
+  }, [activeTab, targetCharToScroll, filteredData]);
 
   const handleAddToPractice = async (charObj) => {
     const char = charObj['Chữ Trung Quốc'];
@@ -947,8 +970,27 @@ function TongHopTab() {
         ))}
       </div>
       <div className="tonghop-list">
+        {activeTab === 'Tìm Kiếm' && (
+           <div style={{marginBottom: '20px', textAlign: 'center'}}>
+              <input 
+                 type="text" 
+                 className="search-input" 
+                 placeholder="Tìm chữ Hán, pinyin, âm Hán Việt, nghĩa..." 
+                 value={searchTerm} 
+                 onChange={e => setSearchTerm(e.target.value)} 
+                 style={{padding: '10px', width: '80%', fontSize: '1.1rem', borderRadius: '5px', border: '1px solid #ccc'}}
+              />
+              <p style={{fontSize: '0.9rem', color: '#666', marginTop: '10px'}}>
+                  Tìm kiếm và bấm "Ghim" ở chữ bạn muốn, sau đó chuyển sang tab khác để tự động nhảy đến vị trí chữ đó.
+              </p>
+           </div>
+        )}
         {filteredData.map((item, idx) => (
-          <div key={idx} className="tonghop-item">
+          <div 
+             key={idx} 
+             id={`tonghop-item-${item['Chữ Trung Quốc']}`} 
+             className={`tonghop-item ${targetCharToScroll === item['Chữ Trung Quốc'] ? 'highlighted-item' : ''}`}
+          >
              <div className="tonghop-index">{idx + 1}</div>
              <div className="tonghop-char">{item['Chữ Trung Quốc']}</div>
              <div className="tonghop-info">
@@ -961,6 +1003,11 @@ function TongHopTab() {
                 )}
              </div>
              <div className="tonghop-actions">
+                {targetCharToScroll === item['Chữ Trung Quốc'] ? (
+                    <span style={{color: '#10b981', fontWeight: 'bold', marginRight: '10px'}}>📌 Đang ghim</span>
+                ) : (
+                    <button className="study-btn" style={{marginRight: '10px', background: '#64748b'}} onClick={() => setTargetCharToScroll(item['Chữ Trung Quốc'])}>Ghim</button>
+                )}
                 {renderSrsIcon(item.srs)}
                 {!item.srs && (
                   <button className="add-btn" onClick={() => handleAddToPractice(item)} title="Thêm vào Luyện tập">+</button>
