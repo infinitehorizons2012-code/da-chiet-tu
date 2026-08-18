@@ -1198,8 +1198,19 @@ function TracNghiemTab() {
     }
   };
 
+  const CYCLE_COLORS = ['#cbd5e1', '#e11d48', '#2563eb', '#059669', '#eab308', '#a855f7', '#f97316'];
+
   const handleStrokeClick = (strokeIndex) => {
-    // Không cho phép tương tác tô màu thủ công nữa theo yêu cầu flashcard
+    if (isRevealed) return;
+    setStrokeColors(prev => {
+      const next = { ...prev };
+      const currentColor = next[strokeIndex] || '#cbd5e1';
+      let currentIndex = CYCLE_COLORS.indexOf(currentColor);
+      if (currentIndex === -1) currentIndex = 0;
+      const nextIndex = (currentIndex + 1) % CYCLE_COLORS.length;
+      next[strokeIndex] = CYCLE_COLORS[nextIndex];
+      return next;
+    });
   };
 
   const updateSrs = async (isCorrect) => {
@@ -1246,17 +1257,28 @@ function TracNghiemTab() {
        return;
     }
 
-    // Tự động tô màu đáp án
-    const correctColors = {};
-    for (const compId in mapping) {
-       const comp = currentChar.parsedComps.find(c => c.id === compId);
-       if (comp) {
-          mapping[compId].forEach(idx => {
-             correctColors[idx] = comp.color;
-          });
-       }
+    // Kiểm tra tính đúng đắn bằng cách so sánh các nhóm nét (partitions)
+    const dbGroups = Object.values(mapping).map(arr => [...arr].sort((a,b)=>a-b));
+    const userGroupsObj = {};
+    Object.entries(strokeColors).forEach(([strokeIdx, color]) => {
+       if (color === '#cbd5e1' || !color) return; // Bỏ qua nét chưa tô màu
+       if (!userGroupsObj[color]) userGroupsObj[color] = [];
+       userGroupsObj[color].push(parseInt(strokeIdx, 10));
+    });
+    const userGroups = Object.values(userGroupsObj).map(arr => arr.sort((a,b)=>a-b));
+
+    const isCorrect = dbGroups.length > 0 && dbGroups.length === userGroups.length && dbGroups.every(dbGroup => {
+       return userGroups.some(uGroup => 
+          uGroup.length === dbGroup.length && uGroup.every((val, i) => val === dbGroup[i])
+       );
+    });
+
+    if (isCorrect) {
+       setFeedback({ type: 'success', message: 'Tuyệt vời! Con đã phân tách chính xác các linh kiện của chữ này.' });
+    } else {
+       setFeedback({ type: 'error', message: 'Chưa chính xác rồi. Con xem lại đáp án ở dưới nhé!' });
     }
-    setStrokeColors(correctColors);
+    
     setIsRevealed(true);
   };
 
@@ -1297,6 +1319,8 @@ function TracNghiemTab() {
                   d={path} 
                   className="hanzi-stroke-path"
                   fill={strokeColors[idx] || '#cbd5e1'} 
+                  onClick={() => handleStrokeClick(idx)}
+                  style={{cursor: isRevealed ? 'default' : 'pointer'}}
                 />
               ))}
             </g>
@@ -1311,7 +1335,8 @@ function TracNghiemTab() {
         <div className="chiettu-components-panel" style={{display: 'flex', flexDirection: 'column', justifyContent: 'center'}}>
           {!isRevealed ? (
              <div style={{textAlign: 'center'}}>
-               <h3 style={{marginBottom: '20px', color: '#64748b'}}>Hãy tự ghi ra nháp các linh kiện của chữ này</h3>
+               <h3 style={{marginBottom: '10px', color: '#64748b'}}>Phân tách nét chữ thành linh kiện</h3>
+               <p style={{marginBottom: '20px', color: '#64748b', fontSize: '0.9rem'}}>Nhấp vào các nét bên trái để tự động gom nhóm bằng màu sắc.</p>
                <button className="save-btn" onClick={checkAnswer} style={{background: '#3b82f6', fontSize: '1.2rem', padding: '15px 30px', width: '100%'}}>Kiểm tra đối chiếu</button>
              </div>
           ) : (
