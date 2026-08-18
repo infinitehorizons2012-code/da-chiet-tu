@@ -175,7 +175,7 @@ function LookupTab() {
   const [result, setResult] = useState(mockDatabase['南'])
   const [error, setError] = useState('')
 
-  const handleSearch = (e) => {
+  const handleSearch = async (e) => {
     if (e) e.preventDefault()
     const char = searchTerm.trim()
     if (!char) return
@@ -229,6 +229,33 @@ function LookupTab() {
 
       setResult(newResult);
       setError('');
+
+      // Dynamically fetch stroke counts to color the character
+      try {
+        let currentStrokeIdx = 0;
+        let strokeDataUpdated = false;
+        for (let comp of newResult.components) {
+          if (comp.char) {
+            const res = await fetch(`https://cdn.jsdelivr.net/npm/hanzi-writer-data@2.0/${comp.char}.json`);
+            if (res.ok) {
+              const data = await res.json();
+              const count = data.strokes.length;
+              comp.strokes = Array.from({length: count}, (_, i) => currentStrokeIdx + i);
+              currentStrokeIdx += count;
+              strokeDataUpdated = true;
+            }
+          }
+        }
+        if (strokeDataUpdated) {
+          setResult({
+            ...newResult,
+            components: newResult.components.map(c => ({...c}))
+          });
+        }
+      } catch (err) {
+        console.error("Lỗi khi tải dữ liệu nét chữ:", err);
+      }
+
     } else if (mockDatabase[char]) {
       setResult(mockDatabase[char])
       setError('')
