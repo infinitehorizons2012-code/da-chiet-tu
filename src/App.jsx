@@ -1023,10 +1023,241 @@ function LuyenTapTab({ setPrimaryTab, setActiveTab, setGlobalLookupTerm }) {
 }
 
 function TracNghiemTab() {
+  const [dueChars, setDueChars] = useState([]);
+  const [currentChar, setCurrentChar] = useState(null);
+  const [strokePaths, setStrokePaths] = useState([]);
+  const [strokeColors, setStrokeColors] = useState({});
+  const [activeComp, setActiveComp] = useState(null);
+  const [feedback, setFeedback] = useState(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+     const eligible = researchDataObj.filter(item => {
+        const status = item.srs?.status;
+        return status && status !== 'bat_dau';
+     });
+     eligible.sort(() => Math.random() - 0.5); 
+     setDueChars(eligible);
+  }, []);
+
+  useEffect(() => {
+     if (dueChars.length > 0 && !currentChar) {
+         loadNextCharacter(dueChars[0]);
+     }
+  }, [dueChars, currentChar]);
+
+  const loadNextCharacter = async (charObj) => {
+    setLoading(true);
+    setFeedback(null);
+    setStrokeColors({});
+    setActiveComp(null);
+    const char = charObj['Chữ Trung Quốc'];
+    
+    const comps = [];
+    const COLORS = [
+      '#e11d48', '#2563eb', '#059669', '#eab308', 
+      '#a855f7', '#10b981', '#f97316', '#14b8a6', 
+      '#6366f1', '#ec4899', '#8b5cf6', '#0ea5e9'
+    ];
+    let compIndex = 0;
+    for (let i = 1; i <= 12; i++) {
+      const compStr = charObj[`App_Comp_${i}`];
+      if (compStr && compStr !== 'nan' && compStr.trim() !== '') {
+        comps.push({
+          id: `App_Comp_${i}`,
+          text: compStr.trim(),
+          color: COLORS[compIndex % COLORS.length]
+        });
+        compIndex++;
+      }
+    }
+    
+    charObj.parsedComps = comps;
+    if (comps.length > 0) setActiveComp(comps[0]);
+    setCurrentChar(charObj);
+
+    try {
+      const res = await fetch(`https://cdn.jsdelivr.net/npm/hanzi-writer-data@2.0/${char}.json`);
+      if (res.ok) {
+        const data = await res.json();
+        setStrokePaths(data.strokes);
+      } else {
+        setStrokePaths([]);
+        setFeedback({ type: 'error', message: `Không tìm thấy nét vẽ cho chữ ${char}`});
+      }
+    } catch (err) {
+      setStrokePaths([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleStrokeClick = (strokeIndex) => {
+    if (!activeComp || feedback?.type === 'success') return;
+    
+    setStrokeColors(prev => {
+      const next = { ...prev };
+      if (next[strokeIndex] === activeComp.color) {
+        delete next[strokeIndex];
+      } else {
+        next[strokeIndex] = activeComp.color;
+      }
+      return next;
+    });
+  };
+
+  const updateSrs = async (isCorrect) => {
+     if (!currentChar) return;
+     let srs = { ...currentChar.srs };
+     
+     if (isCorrect) {
+        if (srs.status === 'san_sang_thi') {
+           srs.status = 'hat_mam'; srs.streak = 1;
+        } else if (srs.status === 'hat_mam') {
+           srs.streak = (srs.streak || 1) + 1;
+           if (srs.streak >= 2) srs.status = 'cay';
+        } else if (srs.status === 'cay') {
+           srs.streak = (srs.streak || 2) + 1;
+           if (srs.streak >= 3) srs.status = 'hoa';
+        } else if (srs.status === 'hoa') {
+           srs.streak = (srs.streak || 3) + 1;
+        }
+     } else {
+        if (srs.status === 'hoa') srs.status = 'cay';
+        else if (srs.status === 'cay') srs.status = 'hat_mam';
+        else if (srs.status === 'hat_mam') srs.status = 'san_sang_thi';
+        srs.streak = 0;
+     }
+
+     try {
+       await fetch('/api/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ char: currentChar['Chữ Trung Quốc'], comps: { srs } })
+       });
+       currentChar.srs = srs;
+     } catch(e) {}
+  };
+
+  const checkAnswer = () => {
+    if (!currentChar) return;
+    const mapping = currentChar.quiz_mapping;
+    if (!mapping) {
+       setFeedback({ type: 'error', message: 'Chữ này chưa có đáp án trên hệ thống! Vui lòng nhờ admin tạo đáp án trước.'});
+       updateSrs(false); // Coi như sai tạm thời hoặc bỏ qua
+       return;
+    }
+
+    const userMapping = {};
+    Object.entries(strokeColors).forEach(([strokeIdxStr, color]) => {
+      const strokeIdx = parseInt(strokeIdxStr, 10);
+      const comp = currentChar.parsedComps.find(c => c.color === color);
+      if (comp) {
+        if (!userMapping[comp.id]) userMapping[comp.id] = [];
+        userMapping[comp.id].push(strokeIdx);
+      }
+    });
+
+    Object.keys(userMapping).forEach(k => userMapping[k].sort((a,b)=>a-b));
+
+    let isCorrect = true;
+    for (const compId in mapping) {
+       const dbStrokes = mapping[compId];
+       const userStrokes = userMapping[compId] || [];
+       if (dbStrokes.length !== userStrokes.length || !dbStrokes.every((v,i) => v === userStrokes[i])) {
+          isCorrect = false; break;
+       }
+    }
+    for (const compId in userMapping) {
+       const userStrokes = userMapping[compId];
+       const dbStrokes = mapping[compId] || [];
+       if (dbStrokes.length !== userStrokes.length || !dbStrokes.every((v,i) => v === userStrokes[i])) {
+          isCorrect = false; break;
+       }
+    }
+
+    if (isCorrect) {
+       setFeedback({ type: 'success', message: 'Chính xác! Bạn đã hiểu cấu tạo chữ này.' });
+       updateSrs(true);
+    } else {
+       setFeedback({ type: 'error', message: 'Chưa chính xác! Sai linh kiện.' });
+       updateSrs(false);
+    }
+  };
+
+  const nextChar = () => {
+     setDueChars(prev => {
+        const nextQ = prev.slice(1);
+        if (nextQ.length > 0) loadNextCharacter(nextQ[0]);
+        else setCurrentChar(null);
+        return nextQ;
+     });
+  };
+
+  if (dueChars.length === 0) {
+     return <div className="empty-msg" style={{textAlign: 'center', padding: '50px', fontSize: '1.2rem', color: '#64748b'}}>Bạn đã hoàn thành tất cả chữ Hán cần ôn tập hôm nay!</div>;
+  }
+
+  if (!currentChar || loading) {
+     return <div style={{textAlign: 'center', padding: '50px'}}>Đang tải bài tập...</div>;
+  }
+
+  const srsIcons = { 'san_sang_thi': '🎯 Sẵn sàng thi', 'hat_mam': '🌱 Hạt mầm', 'cay': '🌳 Cây', 'hoa': '🌸 Hoa' };
+
   return (
-    <div style={{padding: '2rem', textAlign: 'center'}}>
-       <h2>Màn hình Trắc Nghiệm (Chiết tự)</h2>
-       <p>Tính năng Game đang được hoàn thiện...</p>
+    <div className="tracnghiem-tab" style={{padding: '20px', maxWidth: '900px', margin: '0 auto'}}>
+      <div className="tracnghiem-header" style={{textAlign: 'center', marginBottom: '20px'}}>
+         <h2 style={{color: '#1e293b'}}>Trắc nghiệm: Phân tách nét chữ tương ứng linh kiện</h2>
+         <div className="srs-badge" style={{display: 'inline-block', background: '#e0f2fe', color: '#0284c7', padding: '5px 15px', borderRadius: '20px', fontWeight: 'bold', marginTop: '10px'}}>
+            Cấp bậc hiện tại: {srsIcons[currentChar.srs?.status] || 'Không xác định'}
+         </div>
+      </div>
+      <div className="chiettu-workspace">
+        <div className="chiettu-svg-container">
+          <svg viewBox="0 0 1024 1024" className="hanzi-svg">
+            <g transform="scale(1, -1) translate(0, -900)">
+              {strokePaths.map((path, idx) => (
+                <path 
+                  key={idx} 
+                  d={path} 
+                  className="hanzi-stroke-path"
+                  fill={strokeColors[idx] || '#cbd5e1'} 
+                  onClick={() => handleStrokeClick(idx)}
+                />
+              ))}
+            </g>
+          </svg>
+          {feedback && (
+             <div className={`feedback-box ${feedback.type}`} style={{marginTop: '20px', padding: '15px', borderRadius: '8px', fontWeight: 'bold', background: feedback.type === 'success' ? '#dcfce7' : '#fee2e2', color: feedback.type === 'success' ? '#166534' : '#991b1b'}}>
+                {feedback.message}
+             </div>
+          )}
+        </div>
+        
+        <div className="chiettu-components-panel">
+          <h3>Các linh kiện ({currentChar['Chữ Trung Quốc']})</h3>
+          <p style={{fontSize: '0.9rem', color: '#64748b', marginBottom: '15px'}}>Chọn màu cọ và tô vào các nét bên trái</p>
+          <div className="comp-list">
+            {currentChar.parsedComps.map(comp => (
+              <div 
+                key={comp.id}
+                className={`comp-item ${activeComp && activeComp.id === comp.id ? 'active' : ''}`}
+                style={{ borderLeftColor: comp.color }}
+                onClick={() => setActiveComp(comp)}
+              >
+                <div className="comp-color-box" style={{ backgroundColor: comp.color }}></div>
+                <span className="comp-text">{comp.text}</span>
+              </div>
+            ))}
+          </div>
+          
+          {!feedback ? (
+             <button className="save-btn" onClick={checkAnswer} style={{background: '#3b82f6'}}>Kiểm Tra</button>
+          ) : (
+             <button className="save-btn next-btn" onClick={nextChar} style={{background: '#10b981'}}>Câu Tiếp Theo ➔</button>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
