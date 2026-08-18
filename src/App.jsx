@@ -868,11 +868,14 @@ function ChietTuAdminTab({ globalLookupTerm, setGlobalLookupTerm }) {
 }
 
 function TongHopTab() {
-  const tabs = ['9000', 'HSK1', 'HSK2', 'HSK3', 'HSK4', 'HSK5', 'HSK6', 'Chữ Nho'];
+  const tabs = ['9000', 'HSK1', 'HSK2', 'HSK3', 'HSK4', 'HSK5', 'HSK6', 'Chữ Nho', 'Chỉ Âm', '214 Bộ Thủ', 'Từ Ghép'];
   const colMap = {
     '9000': '9000',
     'HSK1': 'HSK1', 'HSK2': 'HSK2', 'HSK3': 'HSK3', 'HSK4': 'HSK4', 'HSK5': 'HSK5', 'HSK6': 'HSK6',
-    'Chữ Nho': 'ChuNhoTongHop_STT (Giáo trình Chữ Nho)'
+    'Chữ Nho': 'ChuNhoTongHop_STT (Giáo trình Chữ Nho)',
+    'Chỉ Âm': 'Group',
+    '214 Bộ Thủ': 'group2',
+    'Từ Ghép': 'Số thứ tự words'
   };
   const [activeTab, setActiveTab] = useState('HSK1');
   
@@ -882,6 +885,11 @@ function TongHopTab() {
       const val = item[col];
       return val !== undefined && val !== '' && val !== 'nan' && val !== null;
     }).sort((a, b) => {
+      if (activeTab === 'Chỉ Âm') {
+        const strA = a[col] || '';
+        const strB = b[col] || '';
+        return strA.localeCompare(strB);
+      }
       const vA = parseFloat(a[col]);
       const vB = parseFloat(b[col]);
       return (isNaN(vA) ? 0 : vA) - (isNaN(vB) ? 0 : vB);
@@ -946,6 +954,11 @@ function TongHopTab() {
              <div className="tonghop-info">
                 <span className="pinyin">{item['Pinyin_Master (Pinyin Chuẩn Tổng Hợp 100%)']}</span>
                 <span className="meaning">{item['Nghĩa Tiếng Việt (Master 100%)']}</span>
+                {(activeTab === 'Chỉ Âm' || activeTab === '214 Bộ Thủ' || activeTab === 'Từ Ghép') && (
+                    <span style={{color: '#8b5cf6', fontSize: '0.85rem', marginTop: '4px'}}>
+                        Nhóm / Giá trị: {item[colMap[activeTab]]}
+                    </span>
+                )}
              </div>
              <div className="tonghop-actions">
                 {renderSrsIcon(item.srs)}
