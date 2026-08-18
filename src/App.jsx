@@ -1010,7 +1010,7 @@ function TongHopTab() {
              </div>
              <div className="tonghop-actions">
                 {targetCharToScroll === item['Chữ Trung Quốc'] ? (
-                    <span style={{color: '#10b981', fontWeight: 'bold', marginRight: '10px'}}>📌 Đang ghim</span>
+                    <button className="study-btn" style={{marginRight: '10px', background: '#10b981'}} onClick={() => setTargetCharToScroll('')}>📌 Bỏ ghim</button>
                 ) : (
                     <button className="study-btn" style={{marginRight: '10px', background: '#64748b'}} onClick={() => setTargetCharToScroll(item['Chữ Trung Quốc'])}>Ghim</button>
                 )}
