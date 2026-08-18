@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo } from 'react'
 import HanziWriter from 'hanzi-writer'
 import './index.css'
 
-import researchDataObj from './data/research_data.json'
+let researchDataObj = [];
 
 const mockDatabase = {
   '妈': {
@@ -582,11 +582,20 @@ function App() {
   const [dataReady, setDataReady] = useState(false);
 
   useEffect(() => {
-    // Fetch user edits from Cloudflare D1 Database
-    fetch('/api/updates')
+    // 1. Fetch static base data
+    Promise.all([
+      fetch('/data/research_data_1.json').then(res => res.json()),
+      fetch('/data/research_data_2.json').then(res => res.json())
+    ])
+      .then(([part1, part2]) => {
+        researchDataObj.push(...part1, ...part2); // Populate global array
+        
+        // 2. Fetch user edits from Cloudflare D1 Database
+        return fetch('/api/updates');
+      })
       .then(res => res.json())
       .then(data => {
-        if (data.success && data.updates) {
+        if (data && data.success && data.updates) {
           const updates = data.updates;
           researchDataObj.forEach(item => {
             const char = item['Chữ Trung Quốc'];
@@ -598,7 +607,7 @@ function App() {
         setDataReady(true);
       })
       .catch(err => {
-        console.error("Failed to load D1 updates:", err);
+        console.error("Failed to load data:", err);
         setDataReady(true); // Vẫn cho phép chạy dùng data gốc
       });
   }, []);

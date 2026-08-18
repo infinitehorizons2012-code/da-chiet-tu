@@ -19,11 +19,7 @@ export async function onRequestPost(context) {
       newData = { ...oldData, ...comps };
     }
 
-    await db.prepare(
-      INSERT INTO user_edits (char, data, updated_at) 
-      VALUES (?, ?, CURRENT_TIMESTAMP)
-      ON CONFLICT(char) DO UPDATE SET data = excluded.data, updated_at = CURRENT_TIMESTAMP
-    ).bind(char, JSON.stringify(newData)).run();
+    await db.prepare('INSERT INTO user_edits (char, data, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP) ON CONFLICT(char) DO UPDATE SET data = excluded.data, updated_at = CURRENT_TIMESTAMP').bind(char, JSON.stringify(newData)).run();
 
     return new Response(JSON.stringify({ success: true }), {
       headers: { 'Content-Type': 'application/json' }
