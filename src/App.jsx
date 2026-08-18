@@ -596,11 +596,241 @@ function App() {
         >
           Nghiên Cứu Chi Tiết
         </button>
+        <button 
+          className={activeTab === 'chiettu' ? 'tab-btn active' : 'tab-btn'} 
+          onClick={() => setActiveTab('chiettu')}
+        >
+          Chiết Tự (Tô nét)
+        </button>
       </div>
       
-      {activeTab === 'lookup' ? <LookupTab globalLookupTerm={globalLookupTerm} setGlobalLookupTerm={setGlobalLookupTerm} /> : <ResearchTab setGlobalLookupTerm={setGlobalLookupTerm} />}
+      {activeTab === 'lookup' && <LookupTab globalLookupTerm={globalLookupTerm} setGlobalLookupTerm={setGlobalLookupTerm} />}
+      {activeTab === 'research' && <ResearchTab setGlobalLookupTerm={setGlobalLookupTerm} />}
+      {activeTab === 'chiettu' && <ChietTuAdminTab globalLookupTerm={globalLookupTerm} setGlobalLookupTerm={setGlobalLookupTerm} />}
     </div>
   )
+}
+
+function ChietTuAdminTab({ globalLookupTerm, setGlobalLookupTerm }) {
+  const [searchTerm, setSearchTerm] = useState(globalLookupTerm || '')
+  const [result, setResult] = useState(null)
+  const [error, setError] = useState('')
+  const [strokePaths, setStrokePaths] = useState([])
+  const [strokeColors, setStrokeColors] = useState({}) // { strokeIndex: colorCode }
+  const [activeComp, setActiveComp] = useState(null)
+  const [saving, setSaving] = useState(false)
+
+  // Colors mapping for 12 components
+  const COLORS = [
+    '#e11d48', '#2563eb', '#059669', '#eab308', 
+    '#a855f7', '#10b981', '#f97316', '#14b8a6', 
+    '#6366f1', '#ec4899', '#8b5cf6', '#0ea5e9'
+  ];
+
+  useEffect(() => {
+    if (globalLookupTerm) {
+      setSearchTerm(globalLookupTerm);
+      handleLoadCharacter(globalLookupTerm);
+    }
+  }, [globalLookupTerm]);
+
+  const handleLoadCharacter = async (charToLoad) => {
+    const char = charToLoad.trim();
+    if (!char) return;
+
+    if (char !== globalLookupTerm) {
+      setGlobalLookupTerm(char);
+    }
+
+    const researchData = researchDataObj.find(item => item['Chữ Trung Quốc'] === char);
+
+    if (researchData) {
+      const comps = [];
+      let compIndex = 0;
+      for (let i = 1; i <= 12; i++) {
+        const compStr = researchData[`App_Comp_${i}`];
+        if (compStr && compStr !== 'nan' && compStr.trim() !== '') {
+          comps.push({
+            id: `App_Comp_${i}`,
+            text: compStr.trim(),
+            color: COLORS[compIndex % COLORS.length]
+          });
+          compIndex++;
+        }
+      }
+
+      setResult({ char, comps });
+      setError('');
+      setStrokeColors({});
+      setActiveComp(comps[0] || null);
+
+      // Load existing quiz_mapping if any
+      if (researchData.quiz_mapping) {
+        const existingMapping = researchData.quiz_mapping;
+        const newStrokeColors = {};
+        comps.forEach(comp => {
+          if (existingMapping[comp.id]) {
+            existingMapping[comp.id].forEach(strokeIdx => {
+              newStrokeColors[strokeIdx] = comp.color;
+            });
+          }
+        });
+        setStrokeColors(newStrokeColors);
+      }
+
+      // Fetch SVG data
+      try {
+        const res = await fetch(`https://cdn.jsdelivr.net/npm/hanzi-writer-data@2.0/${char}.json`);
+        if (res.ok) {
+          const data = await res.json();
+          setStrokePaths(data.strokes);
+        } else {
+          setStrokePaths([]);
+          setError(`Không tìm thấy dữ liệu nét vẽ cho chữ "${char}" từ HanziWriter.`);
+        }
+      } catch (err) {
+        setStrokePaths([]);
+        setError(`Lỗi tải dữ liệu nét vẽ: ${err.message}`);
+      }
+    } else {
+      setError(`Chưa có dữ liệu cho chữ "${char}".`);
+      setResult(null);
+      setStrokePaths([]);
+    }
+  };
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    handleLoadCharacter(searchTerm);
+  };
+
+  const handleStrokeClick = (strokeIndex) => {
+    if (!activeComp) return;
+    
+    setStrokeColors(prev => {
+      const next = { ...prev };
+      // Toggle color off if clicking the same color
+      if (next[strokeIndex] === activeComp.color) {
+        delete next[strokeIndex];
+      } else {
+        next[strokeIndex] = activeComp.color;
+      }
+      return next;
+    });
+  };
+
+  const handleSave = async () => {
+    if (!result) return;
+    
+    setSaving(true);
+    
+    // Reverse map: group stroke indices by active component IDs
+    const quiz_mapping = {};
+    Object.entries(strokeColors).forEach(([strokeIdxStr, color]) => {
+      const strokeIdx = parseInt(strokeIdxStr, 10);
+      const comp = result.comps.find(c => c.color === color);
+      if (comp) {
+        if (!quiz_mapping[comp.id]) quiz_mapping[comp.id] = [];
+        quiz_mapping[comp.id].push(strokeIdx);
+      }
+    });
+
+    // Ensure they are sorted numerically
+    Object.keys(quiz_mapping).forEach(k => {
+      quiz_mapping[k].sort((a, b) => a - b);
+    });
+
+    try {
+      const res = await fetch('/api/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          char: result.char,
+          comps: { quiz_mapping }
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert('Đã lưu đáp án thành công!');
+        // Update local object so it persists across tab switches
+        const item = researchDataObj.find(i => i['Chữ Trung Quốc'] === result.char);
+        if (item) item.quiz_mapping = quiz_mapping;
+      } else {
+        alert('Lỗi lưu: ' + data.error);
+      }
+    } catch (err) {
+      alert('Lỗi mạng: ' + err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="tab-content chiettu-admin">
+      <form className="search-container" onSubmit={handleSearchSubmit}>
+        <input 
+          type="text" 
+          className="search-input" 
+          placeholder="Nhập chữ Hán cần tạo đáp án..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          maxLength={1}
+        />
+        <button type="submit" className="search-button">Tải chữ</button>
+      </form>
+
+      {error && <p className="error-text">{error}</p>}
+
+      {result && strokePaths.length > 0 && (
+        <div className="chiettu-workspace">
+          <div className="chiettu-svg-container">
+            <svg 
+              viewBox="0 0 1024 1024" 
+              className="hanzi-svg"
+            >
+              <g transform="scale(1, -1) translate(0, -900)">
+                {strokePaths.map((path, idx) => (
+                  <path 
+                    key={idx} 
+                    d={path} 
+                    className="hanzi-stroke-path"
+                    fill={strokeColors[idx] || '#cbd5e1'} 
+                    onClick={() => handleStrokeClick(idx)}
+                  />
+                ))}
+              </g>
+            </svg>
+            <p className="hint-text">Click vào nét vẽ để tô màu theo linh kiện đang chọn bên phải</p>
+          </div>
+
+          <div className="chiettu-components-panel">
+            <h3>Danh sách Linh kiện</h3>
+            <div className="comp-list">
+              {result.comps.map(comp => (
+                <div 
+                  key={comp.id}
+                  className={`comp-item ${activeComp && activeComp.id === comp.id ? 'active' : ''}`}
+                  style={{ borderLeftColor: comp.color }}
+                  onClick={() => setActiveComp(comp)}
+                >
+                  <div className="comp-color-box" style={{ backgroundColor: comp.color }}></div>
+                  <span className="comp-text">{comp.text}</span>
+                </div>
+              ))}
+            </div>
+            
+            <button 
+              className="save-btn" 
+              onClick={handleSave} 
+              disabled={saving}
+            >
+              {saving ? 'Đang lưu...' : 'Lưu Đáp Án'}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 export default App
