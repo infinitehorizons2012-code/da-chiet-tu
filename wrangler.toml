@@ -1,0 +1,8 @@
+name = "da-chiet-tu"
+compatibility_date = "2024-03-20"
+pages_build_output_dir = "dist"
+
+[[d1_databases]]
+binding = "hanzi_db"
+database_name = "hanzi-db"
+database_id = "20ac2600-7d15-45e8-af7b-793614974f75"

@@ -579,6 +579,33 @@ function ResearchTab() {
 
 function App() {
   const [activeTab, setActiveTab] = useState('lookup');
+  const [dataReady, setDataReady] = useState(false);
+
+  useEffect(() => {
+    // Fetch user edits from Cloudflare D1 Database
+    fetch('/api/updates')
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.updates) {
+          const updates = data.updates;
+          researchDataObj.forEach(item => {
+            const char = item['Chữ Trung Quốc'];
+            if (updates[char]) {
+              Object.assign(item, updates[char]);
+            }
+          });
+        }
+        setDataReady(true);
+      })
+      .catch(err => {
+        console.error("Failed to load D1 updates:", err);
+        setDataReady(true); // Vẫn cho phép chạy dùng data gốc
+      });
+  }, []);
+
+  if (!dataReady) {
+    return <div style={{textAlign: 'center', marginTop: '50px'}}>Đang đồng bộ dữ liệu từ Cloudflare...</div>;
+  }
 
   return (
     <div className="app-container">
