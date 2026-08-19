@@ -799,13 +799,13 @@ function App() {
           
           {activeTab === 'lookup' && <LookupTab globalLookupTerm={globalLookupTerm} setGlobalLookupTerm={setGlobalLookupTerm} />}
           {activeTab === 'research' && <ResearchTab globalLookupTerm={globalLookupTerm} setGlobalLookupTerm={setGlobalLookupTerm} />}
-          {activeTab === 'chiettu' && <ChietTuAdminTab globalLookupTerm={globalLookupTerm} setGlobalLookupTerm={setGlobalLookupTerm} />}
+          {activeTab === 'chiettu' && <ChietTuAdminTab globalLookupTerm={globalLookupTerm} setGlobalLookupTerm={setGlobalLookupTerm} currentUser={currentUser} />}
         </>
       )}
 
       {primaryTab === 'tonghop' && <TongHopTab currentUser={currentUser} />}
       
-      {primaryTab === 'luyentap' && <LuyenTapTab setPrimaryTab={setPrimaryTab} setActiveTab={setActiveTab} setGlobalLookupTerm={setGlobalLookupTerm} />}
+      {primaryTab === 'luyentap' && <LuyenTapTab setPrimaryTab={setPrimaryTab} setActiveTab={setActiveTab} setGlobalLookupTerm={setGlobalLookupTerm} currentUser={currentUser} />}
       
       {primaryTab === 'tracnghiem' && <TracNghiemTab currentUser={currentUser} />}
       
@@ -813,7 +813,7 @@ function App() {
   )
 }
 
-function ChietTuAdminTab({ globalLookupTerm, setGlobalLookupTerm }) {
+function ChietTuAdminTab({ globalLookupTerm, setGlobalLookupTerm, currentUser }) {
   const [searchTerm, setSearchTerm] = useState(globalLookupTerm || '')
   const [result, setResult] = useState(null)
   const [error, setError] = useState('')
