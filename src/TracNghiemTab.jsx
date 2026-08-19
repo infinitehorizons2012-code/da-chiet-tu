@@ -17,6 +17,7 @@ export default function TracNghiemTab({ currentUser, userStats, setUserStats, sa
   const [mcq, setMcq] = useState(null);
   const [selectedOption, setSelectedOption] = useState(null);
   const [sessionFinished, setSessionFinished] = useState(false);
+  const audioRef = React.useRef(null);
 
   // Sync XP/LP to Backend
   const syncUserStats = async (newXp, newLp) => {
@@ -90,6 +91,25 @@ export default function TracNghiemTab({ currentUser, userStats, setUserStats, sa
           setQuizMode(savedSession.mode);
           setSession(savedSession);
           setSessionFinished(false);
+      }
+  };
+
+  useEffect(() => {
+     if (currentChar && session && session.mode === 'pinyin_han' && !isRevealed) {
+         const audioUrl = currentChar['Link Am Thanh Pinyin (Cloudinary MP3)'];
+         if (audioUrl && audioUrl.startsWith('http')) {
+             if (audioRef.current) {
+                 audioRef.current.src = audioUrl;
+                 audioRef.current.play().catch(e => console.log('Audio autoplay blocked', e));
+             }
+         }
+     }
+  }, [currentChar, session?.mode, isRevealed]);
+
+  const playAudio = (url) => {
+      if (url && url.startsWith('http') && audioRef.current) {
+          audioRef.current.src = url;
+          audioRef.current.play().catch(e => console.log('Audio play blocked', e));
       }
   };
 
@@ -390,6 +410,7 @@ export default function TracNghiemTab({ currentUser, userStats, setUserStats, sa
   if (!session) {
       return (
         <div className="tracnghiem-tab" style={{ padding: '20px', maxWidth: '900px', margin: '0 auto' }}>
+        <audio ref={audioRef} style={{ display: 'none' }} />
           <div className="tab-navigation" style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '20px', justifyContent: 'center' }}>
               <button 
                 className={`tab-btn ${quizMode === 'chiettu' ? 'active' : ''}`} 
