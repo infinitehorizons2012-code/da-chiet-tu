@@ -633,8 +633,7 @@ function LoginScreen({ onLogin }) {
       const res = await fetch(`/api/auth?action=${action}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username: currentUser, username, password })
+        body: JSON.stringify({ username, password })
       });
       const data = await res.json();
       if (data.success) {
@@ -658,8 +657,7 @@ function LoginScreen({ onLogin }) {
       const res = await fetch(`/api/auth?action=delete`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username: currentUser, username, password })
+        body: JSON.stringify({ username, password })
       });
       const data = await res.json();
       if (data.success) {
