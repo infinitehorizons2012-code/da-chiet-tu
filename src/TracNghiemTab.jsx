@@ -108,8 +108,17 @@ export default function TracNghiemTab({ currentUser, userStats, setUserStats, sa
 
   const playAudio = (url) => {
       if (url && url.startsWith('http') && audioRef.current) {
-          audioRef.current.src = url;
-          audioRef.current.play().catch(e => console.log('Audio play blocked', e));
+          if (audioRef.current.src === url && !audioRef.current.paused) {
+              audioRef.current.pause();
+              audioRef.current.currentTime = 0;
+          } else {
+              if (audioRef.current.src !== url) {
+                  audioRef.current.src = url;
+              } else {
+                  audioRef.current.currentTime = 0;
+              }
+              audioRef.current.play().catch(e => console.log('Audio play blocked', e));
+          }
       }
   };
 
