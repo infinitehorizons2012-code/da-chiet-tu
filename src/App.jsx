@@ -445,7 +445,7 @@ function ResearchTab({ globalLookupTerm, setGlobalLookupTerm, currentUser }) {
     setEditData(prev => ({ ...prev, [key]: val }));
   };
 
-  const isFieldEditable = (key) => key.startsWith('App_Comp_') || key === 'App_Mnemonic';
+  const isFieldEditable = (key) => currentUser === 'admin' && (key.startsWith('App_Comp_') || key === 'App_Mnemonic');
 
   const charMap = useMemo(() => {
     const map = new Map();
