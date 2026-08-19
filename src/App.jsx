@@ -1,3 +1,4 @@
+import TracNghiemTab from './TracNghiemTab';
 import { useState, useEffect, useRef, useMemo } from 'react'
 import HanziWriter from 'hanzi-writer'
 import './index.css'
@@ -25,6 +26,16 @@ const getSrsStatus = (item, skill) => {
   // Format mới
   if (item.srs[skill]) return item.srs[skill].status;
   return 'bat_dau';
+};
+
+const getSrsLevel = (item, skill) => {
+  if (!item.srs) return 0;
+  if (item.srs.status && typeof item.srs.status === 'string') {
+     if (skill === 'chiettu') return item.srs.level || 0;
+     return 0;
+  }
+  if (item.srs[skill]) return item.srs[skill].level || 0;
+  return 0;
 };
 
 const getSrsStreak = (item, skill) => {
@@ -58,7 +69,7 @@ const buildNewSrs = (item, skillToUpdate, newStatus, newStreak) => {
    return srs;
 };
 
-function Header({ primaryTab, setPrimaryTab, currentUser, setCurrentUser }) {
+function Header({ primaryTab, setPrimaryTab, currentUser, setCurrentUser, userStats }) {
   const handleLogout = () => {
     setCurrentUser(null);
   };
@@ -67,10 +78,6 @@ function Header({ primaryTab, setPrimaryTab, currentUser, setCurrentUser }) {
     <header className="app-header">
       <div className="header-left">
         <div className="logo-icon">字</div>
-        <div className="logo-text">
-          <span className="title">Bản đồ Chiết tự</span>
-          <span className="subtitle">HỆ THỐNG PHÂN TÍCH CHỮ HÁN</span>
-        </div>
       </div>
       
       <nav className="header-nav">
@@ -90,7 +97,12 @@ function Header({ primaryTab, setPrimaryTab, currentUser, setCurrentUser }) {
 
       <div className="header-right">
         <div className="user-info">
-          <span className="username">{currentUser || 'hang'}</span>
+          {userStats && (
+          <span style={{ marginRight: '15px', fontWeight: 'bold', fontSize: '0.9rem' }}>
+             <span style={{ color: '#f59e0b' }}>⚡ {userStats.xp} XP</span> | <span style={{ color: '#3b82f6' }}>🛡️ {userStats.lp} LP</span>
+          </span>
+        )}
+        <span className="username">{currentUser || 'hang'}</span>
           <span className="user-xp">⚡ 90 XP</span>
         </div>
         <button className="icon-button" onClick={handleLogout} title="Đăng xuất">🚪</button>
@@ -721,6 +733,8 @@ function App() {
   const [dataReady, setDataReady] = useState(false);
   const [globalLookupTerm, setGlobalLookupTerm] = useState('');
   const [currentUser, setCurrentUser] = useState(null);
+  const [userStats, setUserStats] = useState({ xp: 0, lp: 0 });
+  const [savedSession, setSavedSession] = useState(null);
   const [baseDataLoaded, setBaseDataLoaded] = useState(false);
 
   useEffect(() => {
@@ -772,7 +786,7 @@ function App() {
 
   return (
     <div className="app-container">
-      <Header primaryTab={primaryTab} setPrimaryTab={setPrimaryTab} currentUser={currentUser} setCurrentUser={setCurrentUser} />
+      <Header primaryTab={primaryTab} setPrimaryTab={setPrimaryTab} currentUser={currentUser} setCurrentUser={setCurrentUser} userStats={userStats} />
       
       {primaryTab === 'tracuu' && (
         <>
@@ -807,7 +821,7 @@ function App() {
       
       {primaryTab === 'luyentap' && <LuyenTapTab setPrimaryTab={setPrimaryTab} setActiveTab={setActiveTab} setGlobalLookupTerm={setGlobalLookupTerm} currentUser={currentUser} />}
       
-      {primaryTab === 'tracnghiem' && <TracNghiemTab currentUser={currentUser} />}
+      {primaryTab === 'tracnghiem' && <TracNghiemTab currentUser={currentUser} userStats={userStats} setUserStats={setUserStats} savedSession={savedSession} setSavedSession={setSavedSession} researchDataObj={researchDataObj} getSrsStatus={getSrsStatus} getSrsLevel={getSrsLevel} />}
       
     </div>
   )
@@ -1216,500 +1230,143 @@ function TongHopTab({ currentUser }) {
 }
 
 function LuyenTapTab({ setPrimaryTab, setActiveTab, setGlobalLookupTerm, currentUser }) {
-  const tabs = [
-    { id: 'bat_dau', label: '🆕 Bắt đầu' },
-    { id: 'san_sang_thi', label: '🎯 Sẵn sàng thi' },
-    { id: 'hat_mam', label: '🌱 Hạt mầm' },
-    { id: 'cay', label: '🌳 Cây' },
-    { id: 'hoa', label: '🌸 Hoa' }
-  ];
-  const [activeTab, setLocalActiveTab] = useState('bat_dau');
-  const [selectedSkill, setSelectedSkill] = useState('chiettu');
-  const [renderTrigger, setRenderTrigger] = useState(0);
+    const tabs = [
+      { id: 'bat_dau', label: '🆕 Bắt đầu' },
+      { id: 'san_sang_thi', label: '🎯 Sẵn sàng thi' },
+      { id: 'hat_mam', label: '🌱 Hạt mầm' },
+      { id: 'cay', label: '🌲 Cây' },
+      { id: 'hoa', label: '🌸 Hoa' }
+    ];
+    const [activeTab, setLocalActiveTab] = useState('bat_dau');
+    const [renderTrigger, setRenderTrigger] = useState(0);
 
-  const filteredData = useMemo(() => {
-    return researchDataObj.filter(item => {
-      if (!item.srs) return false;
-      return getSrsStatus(item, selectedSkill) === activeTab;
-    });
-  }, [activeTab, selectedSkill, renderTrigger]);
+    const filteredData = useMemo(() => {
+      return researchDataObj.filter(item => {
+        if (!item.srs) return false;
+        
+        let hasBatDau = false;
+        let hasSanSangThi = false;
+        let hasHatMam = false;
+        let hasCay = false;
+        let hasHoa = false;
+        
+        SKILLS.forEach(skill => {
+           const st = getSrsStatus(item, skill.id);
+           if (st === 'bat_dau') hasBatDau = true;
+           if (st === 'san_sang_thi') hasSanSangThi = true;
+           if (st === 'hat_mam') hasHatMam = true;
+           if (st === 'cay') hasCay = true;
+           if (st === 'hoa') hasHoa = true;
+        });
 
-  const handleStudy = (char) => {
-    setGlobalLookupTerm(char);
-    setActiveTab('lookup');
-    setPrimaryTab('tracuu');
-  };
-
-  const handleMoveToReady = async (charObj) => {
-    const originalSrs = { ...charObj.srs };
-    const newSrs = buildNewSrs(charObj, selectedSkill, 'san_sang_thi', 0);
-    
-    // Optimistic UI Update
-    charObj.srs = newSrs;
-    setRenderTrigger(v => v + 1);
-
-    try {
-      const res = await fetch('/api/save', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          username: currentUser,
-          char: charObj['Chữ Trung Quốc'],
-          comps: { srs: newSrs }
-        })
+        if (activeTab === 'bat_dau') return hasBatDau && !hasSanSangThi && !hasHatMam && !hasCay && !hasHoa;
+        if (activeTab === 'san_sang_thi') return hasSanSangThi;
+        if (activeTab === 'hat_mam') return hasHatMam;
+        if (activeTab === 'cay') return hasCay;
+        if (activeTab === 'hoa') return hasHoa;
+        return false;
       });
-      const data = await res.json();
-      if (!data.success) {
-        charObj.srs = originalSrs; // Revert
-        setRenderTrigger(v => v + 1);
-      }
-    } catch (err) {
-      charObj.srs = originalSrs; // Revert
+    }, [activeTab, renderTrigger]);
+
+    const handleStudy = (char) => {
+      setGlobalLookupTerm(char);
+      setActiveTab('lookup');
+      setPrimaryTab('tracuu');
+    };
+
+    const handleMoveAllToReady = async (charObj) => {
+      const originalSrs = { ...charObj.srs };
+      
+      let newSrs = { ...charObj.srs };
+      SKILLS.forEach(skill => {
+         newSrs = buildNewSrs({srs: newSrs}, skill.id, 'san_sang_thi', 0);
+      });
+      
+      charObj.srs = newSrs;
       setRenderTrigger(v => v + 1);
-    }
-  };
 
-  return (
-    <div className="luyentap-tab">
-      <div className="tab-navigation" style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
-        <div>
-          {tabs.map(tab => (
-             <button key={tab.id} className={`tab-btn ${activeTab === tab.id ? 'active' : ''}`} onClick={() => setLocalActiveTab(tab.id)}>
-               {tab.label}
-             </button>
-          ))}
-        </div>
-        <div>
-          <select 
-            value={selectedSkill} 
-            onChange={e => setSelectedSkill(e.target.value)}
-            style={{padding: '8px 12px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '1rem', outline: 'none'}}
-          >
-            {SKILLS.map(s => <option key={s.id} value={s.id}>{s.label}</option>)}
-          </select>
-        </div>
-      </div>
-      <div className="tonghop-list">
-        {filteredData.map((item, idx) => (
-          <div key={idx} className="tonghop-item">
-             <div className="tonghop-index">{idx + 1}</div>
-             <div className="tonghop-char">{item['Chữ Trung Quốc']}</div>
-             <div className="tonghop-info">
-                <span className="pinyin">{item['Pinyin_Master (Pinyin Chuẩn Tổng Hợp 100%)']}</span>
-                <span className="meaning">{item['Nghĩa Tiếng Việt (Master 100%)']}</span>
-             </div>
-             <div className="tonghop-actions">
-                <button className="study-btn" onClick={() => handleStudy(item['Chữ Trung Quốc'])}>Học</button>
-                {activeTab === 'bat_dau' && (
-                  <button className="ready-btn" onClick={() => handleMoveToReady(item)}>Xong</button>
-                )}
-             </div>
-          </div>
-        ))}
-        {filteredData.length === 0 && <div className="empty-msg">Chưa có chữ nào ở mục này.</div>}
-      </div>
-    </div>
-  );
-}
-
-function TracNghiemTab({ currentUser }) {
-  const [quizMode, setQuizMode] = useState('chiettu');
-  const [dueChars, setDueChars] = useState([]);
-  const [currentChar, setCurrentChar] = useState(null);
-  const [strokePaths, setStrokePaths] = useState([]);
-  const [strokeColors, setStrokeColors] = useState({});
-  const [activeComp, setActiveComp] = useState(null);
-  const [feedback, setFeedback] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [isRevealed, setIsRevealed] = useState(false);
-  const [mcq, setMcq] = useState(null);
-  const [selectedOption, setSelectedOption] = useState(null);
-
-  useEffect(() => {
-     const eligible = researchDataObj.filter(item => {
-        const status = getSrsStatus(item, quizMode);
-        return status && status !== 'bat_dau';
-     });
-     eligible.sort(() => Math.random() - 0.5); 
-     setDueChars(eligible);
-     setCurrentChar(null);
-  }, [quizMode]);
-
-  useEffect(() => {
-     if (dueChars.length > 0 && !currentChar) {
-         loadNextCharacter(dueChars[0]);
-     }
-  }, [dueChars, currentChar]);
-
-  const generateMultipleChoice = (charObj, mode) => {
-     let questionText = '';
-     let answerText = '';
-     let options = [];
-     let questionField = '';
-     let answerField = '';
-     
-     if (mode === 'han_pinyin') {
-        questionText = `Chọn Pinyin đúng cho chữ: ${charObj['Chữ Trung Quốc']}`;
-        answerText = charObj['Pinyin_Master (Pinyin Chuẩn Tổng Hợp 100%)'];
-        answerField = 'Pinyin_Master (Pinyin Chuẩn Tổng Hợp 100%)';
-     } else if (mode === 'pinyin_han') {
-        questionText = `Chọn chữ Hán có Pinyin là: ${charObj['Pinyin_Master (Pinyin Chuẩn Tổng Hợp 100%)']}`;
-        answerText = charObj['Chữ Trung Quốc'];
-        answerField = 'Chữ Trung Quốc';
-        questionField = 'Pinyin_Master (Pinyin Chuẩn Tổng Hợp 100%)';
-     } else if (mode === 'han_hanviet') {
-        questionText = `Chọn Âm Hán Việt đúng cho chữ: ${charObj['Chữ Trung Quốc']}`;
-        answerText = charObj['Âm Hán Việt (Master 100%)'];
-        answerField = 'Âm Hán Việt (Master 100%)';
-     } else if (mode === 'hanviet_han') {
-        questionText = `Chọn chữ Hán có Âm Hán Việt là: ${charObj['Âm Hán Việt (Master 100%)']}`;
-        answerText = charObj['Chữ Trung Quốc'];
-        answerField = 'Chữ Trung Quốc';
-        questionField = 'Âm Hán Việt (Master 100%)';
-     } else if (mode === 'han_nghia') {
-        questionText = `Chọn nghĩa đúng cho chữ: ${charObj['Chữ Trung Quốc']}`;
-        answerText = charObj['Nghĩa Tiếng Việt (Master 100%)'];
-        answerField = 'Nghĩa Tiếng Việt (Master 100%)';
-     } else if (mode === 'han_mnemonic') {
-        questionText = `Chọn cách ghi nhớ đúng cho chữ: ${charObj['Chữ Trung Quốc']}`;
-        answerText = charObj['App_Mnemonic'];
-        answerField = 'App_Mnemonic';
-     } else if (mode === 'mnemonic_han') {
-        questionText = `Mnemonic sau đây là của chữ Hán nào:\n"${charObj['App_Mnemonic']}"`;
-        answerText = charObj['Chữ Trung Quốc'];
-        answerField = 'Chữ Trung Quốc';
-        questionField = 'App_Mnemonic';
-     }
-
-     if (!answerText || answerText === 'nan') return null;
-
-     let validPool = researchDataObj.filter(item => {
-        if (item['Chữ Trung Quốc'] === charObj['Chữ Trung Quốc']) return false;
-        if (!item[answerField] || item[answerField] === 'nan' || item[answerField] === '') return false;
-        if (questionField && item[questionField] === charObj[questionField]) return false;
-        if (item[answerField] === answerText) return false;
-        return true;
-     });
-
-     validPool.sort(() => Math.random() - 0.5);
-     const distractors = validPool.slice(0, 3).map(i => i[answerField]);
-     
-     options = [answerText, ...distractors].sort(() => Math.random() - 0.5);
-     
-     return { questionText, options, correctAnswer: answerText };
-  };
-
-  const loadNextCharacter = async (charObj) => {
-    setLoading(true);
-    setFeedback(null);
-    setStrokeColors({});
-    setActiveComp(null);
-    setIsRevealed(false);
-    setSelectedOption(null);
-    setMcq(null);
-    
-    if (quizMode !== 'chiettu') {
-       const mcqData = generateMultipleChoice(charObj, quizMode);
-       setMcq(mcqData);
-       if (!mcqData) {
-          setFeedback({ type: 'error', message: 'Dữ liệu của chữ này bị thiếu, không tạo được câu hỏi.' });
-       }
-       setCurrentChar(charObj);
-       setLoading(false);
-       return;
-    }
-
-    const char = charObj['Chữ Trung Quốc'];
-    const comps = [];
-    const COLORS = [ '#e11d48', '#2563eb', '#059669', '#eab308', '#a855f7', '#10b981', '#f97316', '#14b8a6', '#6366f1', '#ec4899', '#8b5cf6', '#0ea5e9' ];
-    let compIndex = 0;
-    for (let i = 1; i <= 12; i++) {
-      const compStr = charObj[`App_Comp_${i}`];
-      if (compStr && compStr !== 'nan' && compStr.trim() !== '') {
-        comps.push({ id: `App_Comp_${i}`, text: compStr.trim(), color: COLORS[compIndex % COLORS.length] });
-        compIndex++;
-      }
-    }
-    charObj.parsedComps = comps;
-    if (comps.length > 0) setActiveComp(comps[0]);
-    setCurrentChar(charObj);
-
-    try {
-      const res = await fetch(`https://cdn.jsdelivr.net/npm/hanzi-writer-data@2.0/${char}.json`);
-      if (res.ok) {
-        const data = await res.json();
-        setStrokePaths(data.strokes);
-      } else {
-        setStrokePaths([]);
-        setFeedback({ type: 'error', message: `Không tìm thấy nét vẽ cho chữ ${char}`});
-      }
-    } catch (err) {
-      setStrokePaths([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const CYCLE_COLORS = ['#cbd5e1', '#e11d48', '#2563eb', '#059669', '#eab308', '#a855f7', '#f97316'];
-
-  const handleStrokeClick = (strokeIndex) => {
-    if (isRevealed || quizMode !== 'chiettu') return;
-    setStrokeColors(prev => {
-      const next = { ...prev };
-      const currentColor = next[strokeIndex] || '#cbd5e1';
-      let currentIndex = CYCLE_COLORS.indexOf(currentColor);
-      if (currentIndex === -1) currentIndex = 0;
-      const nextIndex = (currentIndex + 1) % CYCLE_COLORS.length;
-      next[strokeIndex] = CYCLE_COLORS[nextIndex];
-      return next;
-    });
-  };
-
-  const updateSrs = async (isCorrect) => {
-     if (!currentChar) return;
-     
-     const currentStatus = getSrsStatus(currentChar, quizMode);
-     const currentStreak = getSrsStreak(currentChar, quizMode);
-     
-     let newStatus = currentStatus;
-     let newStreak = currentStreak;
-     
-     if (isCorrect) {
-        if (currentStatus === 'san_sang_thi') {
-           newStatus = 'hat_mam'; newStreak = 1;
-        } else if (currentStatus === 'hat_mam') {
-           newStreak += 1;
-           if (newStreak >= 2) newStatus = 'cay';
-        } else if (currentStatus === 'cay') {
-           newStreak += 1;
-           if (newStreak >= 3) newStatus = 'hoa';
-        } else if (currentStatus === 'hoa') {
-           newStreak += 1;
-        }
-     } else {
-        if (currentStatus === 'hoa') newStatus = 'cay';
-        else if (currentStatus === 'cay') newStatus = 'hat_mam';
-        else if (currentStatus === 'hat_mam') newStatus = 'san_sang_thi';
-        newStreak = 0;
-     }
-
-     const newSrs = buildNewSrs(currentChar, quizMode, newStatus, newStreak);
-
-     try {
-       await fetch('/api/save', {
+      try {
+        const res = await fetch('/api/save', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-          username: currentUser, char: currentChar['Chữ Trung Quốc'], comps: { srs: newSrs } })
-       });
-       currentChar.srs = newSrs;
-     } catch(e) {}
-     
-     nextChar();
-  };
+            username: currentUser,
+            char: charObj['Chữ Trung Quốc'],
+            comps: { srs: newSrs }
+          })
+        });
+        const data = await res.json();
+        if (!data.success) {
+          charObj.srs = originalSrs;
+          setRenderTrigger(v => v + 1);
+        }
+      } catch (err) {
+        charObj.srs = originalSrs;
+        setRenderTrigger(v => v + 1);
+      }
+    };
 
-  const checkAnswerChiettu = () => {
-    if (!currentChar) return;
-    const mapping = currentChar.quiz_mapping;
-    if (!mapping) {
-       setFeedback({ type: 'error', message: 'Chữ này chưa có đáp án trên hệ thống! Vui lòng nhờ admin tạo đáp án trước.'});
-       setIsRevealed(true);
-       return;
-    }
+    const getIconForStatus = (status) => {
+        if (status === 'san_sang_thi') return '🎯';
+        if (status === 'hat_mam') return '🌱';
+        if (status === 'cay') return '🌲';
+        if (status === 'hoa') return '🌸';
+        return '⚪';
+    };
 
-    const dbGroups = Object.values(mapping).map(arr => [...arr].sort((a,b)=>a-b));
-    const userGroupsObj = {};
-    Object.entries(strokeColors).forEach(([strokeIdx, color]) => {
-       if (color === '#cbd5e1' || !color) return; 
-       if (!userGroupsObj[color]) userGroupsObj[color] = [];
-       userGroupsObj[color].push(parseInt(strokeIdx, 10));
-    });
-    const userGroups = Object.values(userGroupsObj).map(arr => arr.sort((a,b)=>a-b));
-
-    const isCorrect = dbGroups.length > 0 && dbGroups.length === userGroups.length && dbGroups.every(dbGroup => {
-       return userGroups.some(uGroup => 
-          uGroup.length === dbGroup.length && uGroup.every((val, i) => val === dbGroup[i])
-       );
-    });
-
-    if (isCorrect) {
-       setFeedback({ type: 'success', message: 'Tuyệt vời! Con đã phân tách chính xác các linh kiện của chữ này.' });
-    } else {
-       setFeedback({ type: 'error', message: 'Chưa chính xác rồi. Con xem lại đáp án ở dưới nhé!' });
-    }
-    
-    setIsRevealed(true);
-  };
-
-  const handleOptionClick = (option) => {
-     if (isRevealed) return;
-     setSelectedOption(option);
-     setIsRevealed(true);
-     const isCorrect = option === mcq.correctAnswer;
-     if (isCorrect) {
-        setFeedback({ type: 'success', message: 'Chính xác!' });
-        setTimeout(() => updateSrs(true), 1500); 
-     } else {
-        setFeedback({ type: 'error', message: `Chưa chính xác! Đáp án đúng là: ${mcq.correctAnswer}` });
-     }
-  };
-
-  const nextChar = () => {
-     setDueChars(prev => {
-        const nextQ = prev.slice(1);
-        if (nextQ.length > 0) loadNextCharacter(nextQ[0]);
-        else setCurrentChar(null);
-        return nextQ;
-     });
-  };
-
-  const srsIcons = { 'san_sang_thi': '🎯 Sẵn sàng thi', 'hat_mam': '🌱 Hạt mầm', 'cay': '🌳 Cây', 'hoa': '🌸 Hoa' };
-
-  return (
-    <div className="tracnghiem-tab" style={{padding: '20px', maxWidth: '900px', margin: '0 auto'}}>
-      <div className="tab-navigation" style={{display: 'flex', flexWrap: 'wrap', gap: '10px', marginBottom: '20px', justifyContent: 'center'}}>
-        {SKILLS.map(skill => (
-           <button 
-             key={skill.id} 
-             className={`tab-btn ${quizMode === skill.id ? 'active' : ''}`} 
-             onClick={() => setQuizMode(skill.id)}
-             style={{fontSize: '0.9rem', padding: '8px 12px'}}
-           >
-             {skill.label}
-           </button>
-        ))}
-      </div>
-
-      {dueChars.length === 0 ? (
-         <div className="empty-msg" style={{textAlign: 'center', padding: '50px', fontSize: '1.2rem', color: '#64748b'}}>
-            Bạn đã hoàn thành tất cả bài tập cho chế độ này hôm nay!
-         </div>
-      ) : !currentChar || loading ? (
-         <div style={{textAlign: 'center', padding: '50px'}}>Đang tải bài tập...</div>
-      ) : (
-        <>
-          <div className="tracnghiem-header" style={{textAlign: 'center', marginBottom: '20px'}}>
-             <div className="srs-badge" style={{display: 'inline-block', background: '#e0f2fe', color: '#0284c7', padding: '5px 15px', borderRadius: '20px', fontWeight: 'bold'}}>
-                Cấp bậc hiện tại: {srsIcons[getSrsStatus(currentChar, quizMode)] || 'Không xác định'}
-             </div>
+    return (
+      <div className="tonghop-tab">
+        <div className="tab-navigation" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '5px', overflowX: 'auto', paddingBottom: '10px' }}>
+            {tabs.map(tab => (
+               <button 
+                 key={tab.id}
+                 className={`tab-btn ${activeTab === tab.id ? 'active' : ''}`} 
+                 onClick={() => setLocalActiveTab(tab.id)}
+                 style={{ whiteSpace: 'nowrap' }}
+               >
+                 {tab.label}
+               </button>
+            ))}
           </div>
-
-          {quizMode === 'chiettu' ? (
-             <div className="chiettu-workspace">
-               <div className="chiettu-svg-container">
-                 <svg viewBox="0 0 1024 1024" className="hanzi-svg">
-                   <g transform="scale(1, -1) translate(0, -900)">
-                     {strokePaths.map((path, idx) => (
-                       <path 
-                         key={idx} 
-                         d={path} 
-                         className="hanzi-stroke-path"
-                         fill={strokeColors[idx] || '#cbd5e1'} 
-                         onClick={() => handleStrokeClick(idx)}
-                         style={{cursor: isRevealed ? 'default' : 'pointer'}}
-                       />
-                     ))}
-                   </g>
-                 </svg>
-                 {feedback && (
-                    <div className={`feedback-box ${feedback.type}`} style={{marginTop: '20px', padding: '15px', borderRadius: '8px', fontWeight: 'bold', background: feedback.type === 'success' ? '#dcfce7' : '#fee2e2', color: feedback.type === 'success' ? '#166534' : '#991b1b'}}>
-                       {feedback.message}
-                    </div>
-                 )}
+        </div>
+        <div className="tonghop-list">
+          {filteredData.map((item, idx) => (
+            <div key={idx} className="tonghop-item" style={{ display: 'flex', flexDirection: 'column', padding: '15px' }}>
+               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                   <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                       <div className="tonghop-index">{idx + 1}</div>
+                       <div className="tonghop-char">{item['Chữ Trung Quốc']}</div>
+                       <div className="tonghop-info" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          <span className="pinyin">{item['Pinyin_Master (Pinyin Chuẩn Tổng Hợp 100%)']}</span>
+                          <span className="nghia">{item['Nghĩa Tiếng Việt (Master 100%)']}</span>
+                       </div>
+                   </div>
+                   <div className="tonghop-actions">
+                      <button className="study-btn" onClick={() => handleStudy(item['Chữ Trung Quốc'])}>Học</button>
+                      {activeTab === 'bat_dau' && (
+                        <button className="ready-btn" onClick={() => handleMoveAllToReady(item)}>Sẵn sàng thi</button>
+                      )}
+                   </div>
                </div>
                
-               <div className="chiettu-components-panel" style={{display: 'flex', flexDirection: 'column', justifyContent: 'center'}}>
-                 {!isRevealed ? (
-                    <div style={{textAlign: 'center'}}>
-                      <h3 style={{marginBottom: '10px', color: '#64748b'}}>Phân tách nét chữ thành linh kiện</h3>
-                      <p style={{marginBottom: '20px', color: '#64748b', fontSize: '0.9rem'}}>Nhấp vào các nét bên trái để tự động gom nhóm bằng màu sắc.</p>
-                      <button className="save-btn" onClick={checkAnswerChiettu} style={{background: '#3b82f6', fontSize: '1.2rem', padding: '15px 30px', width: '100%'}}>Kiểm tra đối chiếu</button>
-                    </div>
-                 ) : (
-                    <>
-                      <h3>Đáp án: Các linh kiện ({currentChar['Chữ Trung Quốc']})</h3>
-                      <div className="comp-list">
-                        {currentChar.parsedComps.map(comp => (
-                          <div key={comp.id} className="comp-item" style={{ borderLeftColor: comp.color }}>
-                            <div className="comp-color-box" style={{ backgroundColor: comp.color }}></div>
-                            <span className="comp-text">{comp.text}</span>
+               <div style={{ marginTop: '15px', background: '#f8fafc', padding: '10px', borderRadius: '8px', display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                  {SKILLS.map(skill => {
+                      const st = getSrsStatus(item, skill.id);
+                      return (
+                          <div key={skill.id} style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.85rem', background: 'white', padding: '4px 8px', borderRadius: '4px', border: '1px solid #e2e8f0' }}>
+                              <span title={st}>{getIconForStatus(st)}</span>
+                              <span style={{ color: '#64748b' }}>{skill.label}</span>
                           </div>
-                        ))}
-                      </div>
-                      {!feedback ? (
-                         <div style={{marginTop: '30px'}}>
-                            <h4 style={{textAlign: 'center', marginBottom: '15px'}}>Bạn làm đúng chứ?</h4>
-                            <div style={{display: 'flex', gap: '15px'}}>
-                               <button className="save-btn" onClick={() => updateSrs(false)} style={{background: '#ef4444', flex: 1}}>Sai (Làm lại sau)</button>
-                               <button className="save-btn" onClick={() => updateSrs(true)} style={{background: '#10b981', flex: 1}}>Đúng (Lên cấp)</button>
-                            </div>
-                         </div>
-                      ) : (
-                         <button className="save-btn next-btn" onClick={nextChar} style={{background: '#10b981', marginTop: '20px'}}>Câu Tiếp Theo ➔</button>
-                      )}
-                    </>
-                 )}
+                      );
+                  })}
                </div>
-             </div>
-          ) : (
-             <div className="mcq-workspace" style={{background: 'white', padding: '30px', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', textAlign: 'center'}}>
-               {mcq ? (
-                  <>
-                    <h3 style={{fontSize: '1.3rem', color: '#334155', marginBottom: '30px', whiteSpace: 'pre-wrap'}}>{mcq.questionText}</h3>
-                    <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px'}}>
-                       {mcq.options.map((opt, idx) => {
-                          let bg = '#f8fafc';
-                          let color = '#334155';
-                          let border = '2px solid #e2e8f0';
-                          if (isRevealed) {
-                             if (opt === mcq.correctAnswer) {
-                                bg = '#dcfce7'; color = '#166534'; border = '2px solid #22c55e';
-                             } else if (opt === selectedOption) {
-                                bg = '#fee2e2'; color = '#991b1b'; border = '2px solid #ef4444';
-                             }
-                          }
-                          return (
-                             <button 
-                               key={idx}
-                               onClick={() => handleOptionClick(opt)}
-                               disabled={isRevealed}
-                               style={{
-                                 padding: '20px', 
-                                 fontSize: '1.2rem', 
-                                 borderRadius: '12px',
-                                 background: bg,
-                                 color: color,
-                                 border: border,
-                                 cursor: isRevealed ? 'default' : 'pointer',
-                                 transition: 'all 0.2s'
-                               }}
-                             >
-                               {opt}
-                             </button>
-                          );
-                       })}
-                    </div>
-                    {feedback && (
-                       <div className={`feedback-box ${feedback.type}`} style={{marginTop: '20px', padding: '15px', borderRadius: '8px', fontWeight: 'bold', background: feedback.type === 'success' ? '#dcfce7' : '#fee2e2', color: feedback.type === 'success' ? '#166534' : '#991b1b'}}>
-                          {feedback.message}
-                       </div>
-                    )}
-                    {isRevealed && feedback?.type === 'error' && (
-                       <button className="save-btn next-btn" onClick={() => updateSrs(false)} style={{background: '#ef4444', marginTop: '20px', padding: '10px 30px'}}>Tiếp tục</button>
-                    )}
-                  </>
-               ) : (
-                  <div>
-                    {feedback ? feedback.message : 'Lỗi tạo câu hỏi.'}
-                    <button className="save-btn next-btn" onClick={nextChar} style={{background: '#3b82f6', marginTop: '20px'}}>Bỏ qua chữ này</button>
-                  </div>
-               )}
-             </div>
-          )}
-        </>
-      )}
-    </div>
-  );
+            </div>
+          ))}
+          {filteredData.length === 0 && <div className="empty-msg">Chưa có chữ nào ở mục này.</div>}
+        </div>
+      </div>
+    );
 }
 
 export default App
