@@ -630,23 +630,22 @@ export default function TracNghiemTab({ currentUser, userStats, setUserStats, sa
 
                       return (
                         <button 
-                          key={idx}
-                          onClick={() => handleMcqSelect(option)}
-                          disabled={isRevealed}
-                          style={{
-                            padding: '20px', fontSize: '1.2rem', borderRadius: '12px',
-                            background: bgColor, color, border,
-                            cursor: isRevealed ? 'default' : 'pointer',
-                            transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px'
-                          }}
-                        >
-                          <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                            key={idx}
+                            onClick={() => handleMcqSelect(option)}
+                            disabled={isRevealed}
+                            style={{
+                              padding: '20px', fontSize: '1.2rem', borderRadius: '12px',
+                              background: bgColor, color: color, border: border,
+                              cursor: isRevealed ? 'default' : 'pointer',
+                              transition: 'all 0.2s',
+                              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px'
+                            }}
+                          >
                             <span>{option}</span>
-                            {session.mode === 'han_pinyin' && isRevealed && option === mcq.correctAnswer && currentChar['Link Âm Thanh Pinyin (Cloudinary MP3)'] && (
-                                <span onClick={(e) => { e.stopPropagation(); playAudio(currentChar['Link Âm Thanh Pinyin (Cloudinary MP3)']); }} style={{ marginLeft: '10px', fontSize: '1.5rem', cursor: 'pointer', pointerEvents: 'auto' }}>🔊</span>
+                            {session.mode === 'han_pinyin' && mcq.audioMap && mcq.audioMap[option] && (
+                                <span onClick={(e) => { e.stopPropagation(); playAudio(mcq.audioMap[option]); }} style={{ fontSize: '1.5rem', cursor: 'pointer', pointerEvents: 'auto' }}>🔊</span>
                             )}
-                          </span>
-                        </button>
+                          </button>
                       );
                     })}
                   </div>
