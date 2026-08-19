@@ -96,7 +96,7 @@ export default function TracNghiemTab({ currentUser, userStats, setUserStats, sa
 
   useEffect(() => {
      if (currentChar && session && session.mode === 'pinyin_han' && !isRevealed) {
-         const audioUrl = currentChar['Link Am Thanh Pinyin (Cloudinary MP3)'];
+         const audioUrl = currentChar['Link Âm Thanh Pinyin (Cloudinary MP3)'];
          if (audioUrl && audioUrl.startsWith('http')) {
              if (audioRef.current) {
                  audioRef.current.src = audioUrl;
