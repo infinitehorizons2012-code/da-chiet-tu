@@ -382,7 +382,7 @@ function LookupTab({ globalLookupTerm, setGlobalLookupTerm }) {
   )
 }
 
-function ResearchTab({ globalLookupTerm, setGlobalLookupTerm }) {
+function ResearchTab({ globalLookupTerm, setGlobalLookupTerm, currentUser }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortMode, setSortMode] = useState('frequency');
   const [selectedChar, setSelectedChar] = useState(null);
@@ -852,7 +852,7 @@ function App() {
           </div>
           
           {activeTab === 'lookup' && <LookupTab globalLookupTerm={globalLookupTerm} setGlobalLookupTerm={setGlobalLookupTerm} />}
-          {activeTab === 'research' && <ResearchTab globalLookupTerm={globalLookupTerm} setGlobalLookupTerm={setGlobalLookupTerm} />}
+          {activeTab === 'research' && <ResearchTab globalLookupTerm={globalLookupTerm} setGlobalLookupTerm={setGlobalLookupTerm} currentUser={currentUser} />}
           {activeTab === 'chiettu' && <ChietTuAdminTab globalLookupTerm={globalLookupTerm} setGlobalLookupTerm={setGlobalLookupTerm} currentUser={currentUser} />}
         </>
       )}
