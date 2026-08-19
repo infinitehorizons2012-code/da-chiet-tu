@@ -1136,8 +1136,17 @@ function TongHopTab({ currentUser }) {
         if (activeTab.startsWith('Chữ Nho - Nhóm')) {
             const groupNum = parseInt(activeTab.replace('Chữ Nho - Nhóm ', ''));
             const stt = parseFloat(val);
-            const min = (groupNum - 1) * 5 + 1;
-            const max = groupNum * 5;
+            let min, max;
+            
+            if (groupNum === 1) { min = 1; max = 5; }
+            else if (groupNum === 2) { min = 6; max = 11; }
+            else if (groupNum === 3) { min = 12; max = 16; }
+            else {
+                // Nhóm 4 trở đi mặc định mỗi nhóm 5 chữ nối tiếp
+                min = (groupNum - 4) * 5 + 17;
+                max = min + 4;
+            }
+
             if (stt < min || stt > max) return false;
         }
         return true;
