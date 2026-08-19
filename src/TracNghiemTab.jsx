@@ -106,19 +106,21 @@ export default function TracNghiemTab({ currentUser, userStats, setUserStats, sa
      }
   }, [currentChar, session?.mode, isRevealed]);
 
+  const audioInstanceRef = React.useRef(null);
   const playAudio = (url) => {
-      if (url && url.startsWith('http') && audioRef.current) {
-          if (audioRef.current.src === url && !audioRef.current.paused) {
-              audioRef.current.pause();
-              audioRef.current.currentTime = 0;
-          } else {
-              if (audioRef.current.src !== url) {
-                  audioRef.current.src = url;
-              } else {
-                  audioRef.current.currentTime = 0;
-              }
-              audioRef.current.play().catch(e => console.log('Audio play blocked', e));
+      if (!url || !url.startsWith('http')) return;
+      if (audioInstanceRef.current && audioInstanceRef.current.src === url && !audioInstanceRef.current.paused) {
+          audioInstanceRef.current.pause();
+          audioInstanceRef.current.currentTime = 0;
+      } else {
+          if (audioInstanceRef.current && audioInstanceRef.current.src !== url) {
+              audioInstanceRef.current.pause();
           }
+          if (!audioInstanceRef.current || audioInstanceRef.current.src !== url) {
+              audioInstanceRef.current = new Audio(url);
+          }
+          audioInstanceRef.current.currentTime = 0;
+          audioInstanceRef.current.play().catch(e => console.error("Audio block:", e));
       }
   };
 
@@ -600,7 +602,7 @@ export default function TracNghiemTab({ currentUser, userStats, setUserStats, sa
                 <>
                   <h3 style={{ fontSize: '1.3rem', color: '#334155', marginBottom: '30px', whiteSpace: 'pre-wrap' }}>
   {mcq.questionText}
-  {(session.mode === 'pinyin_han' || session.mode === 'han_pinyin') && currentChar['Link Âm Thanh Pinyin (Cloudinary MP3)'] && (
+  {session.mode === 'pinyin_han' && currentChar['Link Âm Thanh Pinyin (Cloudinary MP3)'] && (
       <button onClick={() => playAudio(currentChar['Link Âm Thanh Pinyin (Cloudinary MP3)'])} style={{ marginLeft: '15px', fontSize: '1.5rem', background: 'none', border: 'none', cursor: 'pointer', verticalAlign: 'middle' }}>🔊</button>
   )}
 </h3>
@@ -630,7 +632,12 @@ export default function TracNghiemTab({ currentUser, userStats, setUserStats, sa
                             transition: 'all 0.2s'
                           }}
                         >
-                          {option}
+                          <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <span>{option}</span>
+                            {session.mode === 'han_pinyin' && isRevealed && option === mcq.correctAnswer && currentChar['Link Âm Thanh Pinyin (Cloudinary MP3)'] && (
+                                <span onClick={(e) => { e.stopPropagation(); playAudio(currentChar['Link Âm Thanh Pinyin (Cloudinary MP3)']); }} style={{ marginLeft: '10px', fontSize: '1.5rem', cursor: 'pointer', pointerEvents: 'auto' }}>🔊</span>
+                            )}
+                          </span>
                         </button>
                       );
                     })}
