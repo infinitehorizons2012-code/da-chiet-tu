@@ -1105,6 +1105,13 @@ function TongHopTab({ currentUser }) {
   const [targetCharToScroll, setTargetCharToScroll] = useState('');
   const [renderTrigger, setRenderTrigger] = useState(0);
   const [showHskMenu, setShowHskMenu] = useState(false);
+    const [showNhoMenu, setShowNhoMenu] = useState(false);
+    
+    // Generate Nho groups: Nhom 1 (1-5), Nhom 2 (6-10), ..., up to ~1200
+    const nhoGroups = ['Tổng'];
+    for(let i = 1; i <= 240; i++) {
+       nhoGroups.push(`Nhóm ${i}`);
+    }
   
   const filteredData = useMemo(() => {
     if (activeTab === 'Tìm Kiếm') {
@@ -1117,13 +1124,26 @@ function TongHopTab({ currentUser }) {
                   (item['Nghĩa Tiếng Việt (Master 100%)'] && item['Nghĩa Tiếng Việt (Master 100%)'].toLowerCase().includes(term));
         }).slice(0, 100);
     }
-    const col = colMap[activeTab];
-    return researchDataObj.filter(item => {
-      const val = item[col];
-      return val !== undefined && val !== '' && val !== 'nan' && val !== null;
-    }).sort((a, b) => {
-      if (activeTab === 'Chỉ Âm') {
-        const strA = a[col] || '';
+    let baseTab = activeTab;
+      if (activeTab.startsWith('Chữ Nho')) {
+          baseTab = 'Chữ Nho';
+      }
+      const col = colMap[baseTab];
+      return researchDataObj.filter(item => {
+        const val = item[col];
+        if (val === undefined || val === '' || val === 'nan' || val === null) return false;
+        
+        if (activeTab.startsWith('Chữ Nho - Nhóm')) {
+            const groupNum = parseInt(activeTab.replace('Chữ Nho - Nhóm ', ''));
+            const stt = parseFloat(val);
+            const min = (groupNum - 1) * 5 + 1;
+            const max = groupNum * 5;
+            if (stt < min || stt > max) return false;
+        }
+        return true;
+      }).sort((a, b) => {
+      if (baseTab === 'Chỉ Âm') {
+          const strA = a[col] || '';
         const strB = b[col] || '';
         return strA.localeCompare(strB);
       }
@@ -1213,7 +1233,20 @@ function TongHopTab({ currentUser }) {
            )}
          </div>
 
-         <button className={`tab-btn ${activeTab === 'Chữ Nho' ? 'active' : ''}`} onClick={() => setActiveTab('Chữ Nho')}>Chữ Nho</button>
+         <div className="tab-dropdown" onMouseEnter={() => setShowNhoMenu(true)} onMouseLeave={() => setShowNhoMenu(false)} style={{position: 'relative'}}>
+             <button className={`tab-btn ${activeTab.startsWith('Chữ Nho') ? 'active' : ''}`} onClick={() => setActiveTab('Chữ Nho - Tổng')}>
+               {activeTab.startsWith('Chữ Nho') ? (activeTab === 'Chữ Nho - Tổng' ? 'Chữ Nho' : activeTab.replace('Chữ Nho - ', '')) : 'Chữ Nho'} ▼
+             </button>
+             {showNhoMenu && (
+               <div className="dropdown-menu" style={{position: 'absolute', top: '100%', left: 0, backgroundColor: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', zIndex: 100, minWidth: '120px', padding: '5px 0', maxHeight: '300px', overflowY: 'auto'}}>
+                 {nhoGroups.map(grp => (
+                   <div key={grp} className="dropdown-item" onClick={() => { setActiveTab(`Chữ Nho - ${grp}`); setShowNhoMenu(false); }} style={{padding: '10px 20px', cursor: 'pointer', color: '#334155'}}>
+                     {grp}
+                   </div>
+                 ))}
+               </div>
+             )}
+           </div>
          <button className={`tab-btn ${activeTab === 'Chỉ Âm' ? 'active' : ''}`} onClick={() => setActiveTab('Chỉ Âm')}>Chỉ Âm</button>
          <button className={`tab-btn ${activeTab === 'Components' ? 'active' : ''}`} onClick={() => setActiveTab('Components')}>Components</button>
          <button className={`tab-btn ${activeTab === 'Characters' ? 'active' : ''}`} onClick={() => setActiveTab('Characters')}>Characters</button>
@@ -1240,7 +1273,9 @@ function TongHopTab({ currentUser }) {
              id={`tonghop-item-${item['Chữ Trung Quốc']}`} 
              className={`tonghop-item ${targetCharToScroll === item['Chữ Trung Quốc'] ? 'highlighted-item' : ''}`}
           >
-             <div className="tonghop-index">{idx + 1}</div>
+             <div className="tonghop-index">
+                  {activeTab.startsWith('Chữ Nho') ? (item['ChuNhoTongHop_STT (Giáo trình Chữ Nho)'] !== undefined ? item['ChuNhoTongHop_STT (Giáo trình Chữ Nho)'] : idx + 1) : idx + 1}
+               </div>
              <div className="tonghop-char">{item['Chữ Trung Quốc']}</div>
              <div className="tonghop-info">
                 <span className="pinyin">{item['Pinyin_Master (Pinyin Chuẩn Tổng Hợp 100%)']}</span>
@@ -1433,7 +1468,9 @@ function LuyenTapTab({ setPrimaryTab, setActiveTab, setGlobalLookupTerm, current
             <div key={idx} className="tonghop-item" style={{ display: 'flex', flexDirection: 'column', padding: '15px' }}>
                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
                    <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-                       <div className="tonghop-index">{idx + 1}</div>
+                       <div className="tonghop-index">
+                  {activeTab.startsWith('Chữ Nho') ? (item['ChuNhoTongHop_STT (Giáo trình Chữ Nho)'] !== undefined ? item['ChuNhoTongHop_STT (Giáo trình Chữ Nho)'] : idx + 1) : idx + 1}
+               </div>
                        <div className="tonghop-char">{item['Chữ Trung Quốc']}</div>
                        <div className="tonghop-info" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                           <span className="pinyin">{item['Pinyin_Master (Pinyin Chuẩn Tổng Hợp 100%)']}</span>
