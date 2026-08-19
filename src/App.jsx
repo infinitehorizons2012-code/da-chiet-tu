@@ -102,8 +102,6 @@ function Header({ primaryTab, setPrimaryTab, currentUser, setCurrentUser, userSt
              <span style={{ color: '#f59e0b' }}>⚡ {userStats.xp} XP</span> | <span style={{ color: '#3b82f6' }}>🛡️ {userStats.lp} LP</span>
           </span>
         )}
-        <span className="username">{currentUser || 'hang'}</span>
-          <span className="user-xp">⚡ 90 XP</span>
         </div>
         <button className="icon-button" onClick={handleLogout} title="Đăng xuất">🚪</button>
       </div>

@@ -598,7 +598,12 @@ export default function TracNghiemTab({ currentUser, userStats, setUserStats, sa
             <div className="mcq-workspace" style={{ background: 'white', padding: '30px', borderRadius: '12px', boxShadow: '0 4px 6px rgba(0,0,0,0.05)', textAlign: 'center' }}>
               {mcq ? (
                 <>
-                  <h3 style={{ fontSize: '1.3rem', color: '#334155', marginBottom: '30px', whiteSpace: 'pre-wrap' }}>{mcq.questionText}</h3>
+                  <h3 style={{ fontSize: '1.3rem', color: '#334155', marginBottom: '30px', whiteSpace: 'pre-wrap' }}>
+  {mcq.questionText}
+  {(session.mode === 'pinyin_han' || session.mode === 'han_pinyin') && currentChar['Link Âm Thanh Pinyin (Cloudinary MP3)'] && (
+      <button onClick={() => playAudio(currentChar['Link Âm Thanh Pinyin (Cloudinary MP3)'])} style={{ marginLeft: '15px', fontSize: '1.5rem', background: 'none', border: 'none', cursor: 'pointer', verticalAlign: 'middle' }}>🔊</button>
+  )}
+</h3>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
                     {mcq.options.map((option, idx) => {
                       let bgColor = '#f8fafc';
