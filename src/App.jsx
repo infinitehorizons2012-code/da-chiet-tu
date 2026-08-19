@@ -96,13 +96,14 @@ function Header({ primaryTab, setPrimaryTab, currentUser, setCurrentUser, userSt
       </nav>
 
       <div className="header-right">
-        <div className="user-info">
-          {userStats && (
-          <span style={{ marginRight: '15px', fontWeight: 'bold', fontSize: '0.9rem' }}>
-             <span style={{ color: '#f59e0b' }}>⚡ {userStats.xp} XP</span> | <span style={{ color: '#3b82f6' }}>🛡️ {userStats.lp} LP</span>
-          </span>
-        )}
-        </div>
+        <div className="user-info" style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', justifyContent: 'center' }}>
+            <span className="username" style={{ marginRight: '15px', color: '#1e293b' }}>{currentUser}</span>
+            {userStats && (
+            <span style={{ marginRight: '15px', fontWeight: 'bold', fontSize: '0.85rem' }}>
+               <span style={{ color: '#f59e0b' }}>⚡ {userStats.xp} XP</span> <span style={{ margin: '0 4px', color: '#cbd5e1' }}>|</span> <span style={{ color: '#3b82f6' }}>🛡️ {userStats.lp} LP</span>
+            </span>
+            )}
+          </div>
         <button className="icon-button" onClick={handleLogout} title="Đăng xuất">🚪</button>
       </div>
     </header>
