@@ -1314,7 +1314,53 @@ function LuyenTapTab({ setPrimaryTab, setActiveTab, setGlobalLookupTerm, current
       setPrimaryTab('tracuu');
     };
 
-    const handleMoveAllToReady = async (charObj) => {
+    const saveSrs = async (charObj, originalSrs, newSrs) => {
+        try {
+          const res = await fetch('/api/save', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              username: currentUser,
+              char: charObj['Chữ Trung Quốc'],
+              comps: { srs: newSrs }
+            })
+          });
+          const data = await res.json();
+          if (!data.success) {
+            charObj.srs = originalSrs;
+            setRenderTrigger(v => v + 1);
+          }
+        } catch (err) {
+          charObj.srs = originalSrs;
+          setRenderTrigger(v => v + 1);
+        }
+      };
+
+      const handleRevertToBatDau = async (charObj) => {
+        if (!window.confirm(`Bạn có chắc muốn đưa chữ "${charObj['Chữ Trung Quốc']}" về trạng thái Bắt đầu? Toàn bộ tiến độ trắc nghiệm của chữ này sẽ bị xóa bỏ!`)) return;
+        const originalSrs = { ...charObj.srs };
+        let newSrs = { ...charObj.srs };
+        SKILLS.forEach(skill => {
+           newSrs = buildNewSrs({srs: newSrs}, skill.id, 'bat_dau', 0);
+        });
+        charObj.srs = newSrs;
+        setRenderTrigger(v => v + 1);
+        await saveSrs(charObj, originalSrs, newSrs);
+      };
+
+      const handleRevertToSanSangThi = async (charObj) => {
+        if (!window.confirm(`Bạn có chắc muốn đưa chữ "${charObj['Chữ Trung Quốc']}" về Sẵn sàng thi? Tiến độ Hạt mầm/Cây/Hoa của chữ này sẽ bị xóa bỏ!`)) return;
+        const originalSrs = { ...charObj.srs };
+        let newSrs = { ...charObj.srs };
+        SKILLS.forEach(skill => {
+           newSrs = buildNewSrs({srs: newSrs}, skill.id, 'san_sang_thi', 0);
+        });
+        charObj.srs = newSrs;
+        setRenderTrigger(v => v + 1);
+        await saveSrs(charObj, originalSrs, newSrs);
+      };
+
+      const handleMoveAllToReady = async (charObj) => {
       const originalSrs = { ...charObj.srs };
       
       let newSrs = { ...charObj.srs };
@@ -1386,12 +1432,18 @@ function LuyenTapTab({ setPrimaryTab, setActiveTab, setGlobalLookupTerm, current
                           <span className="nghia">{item['Nghĩa Tiếng Việt (Master 100%)']}</span>
                        </div>
                    </div>
-                   <div className="tonghop-actions">
-                      <button className="study-btn" onClick={() => handleStudy(item['Chữ Trung Quốc'])}>Học</button>
-                      {SKILLS.some(skill => getSrsStatus(item, skill.id) === 'bat_dau') && (
-                        <button className="ready-btn" onClick={() => handleMoveAllToReady(item)}>Sẵn sàng thi</button>
-                      )}
-                   </div>
+                   <div className="tonghop-actions" style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                        <button className="study-btn" onClick={() => handleStudy(item['Chữ Trung Quốc'])}>Học</button>
+                        {SKILLS.some(skill => getSrsStatus(item, skill.id) === 'bat_dau') && (
+                          <button className="ready-btn" onClick={() => handleMoveAllToReady(item)}>Sẵn sàng thi</button>
+                        )}
+                        {SKILLS.some(skill => getSrsStatus(item, skill.id) !== 'bat_dau') && (
+                          <button onClick={() => handleRevertToBatDau(item)} style={{background: '#ef4444', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '500'}}>🔙 Bắt đầu</button>
+                        )}
+                        {SKILLS.some(skill => ['hat_mam', 'cay', 'hoa'].includes(getSrsStatus(item, skill.id))) && (
+                          <button onClick={() => handleRevertToSanSangThi(item)} style={{background: '#f59e0b', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '500'}}>🔙 Sẵn sàng thi</button>
+                        )}
+                     </div>
                </div>
                
                <div style={{ marginTop: '15px', background: '#f8fafc', padding: '10px', borderRadius: '8px', display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
