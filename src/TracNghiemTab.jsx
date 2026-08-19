@@ -275,11 +275,19 @@ export default function TracNghiemTab({ currentUser, userStats, setUserStats, sa
      });
 
      validPool.sort(() => Math.random() - 0.5);
-     const distractors = validPool.slice(0, 3).map(i => i[answerField]);
-     
-     options = [answerText, ...distractors].sort(() => Math.random() - 0.5);
-     
-     return { questionText, options, correctAnswer: answerText };
+       const distractors = validPool.slice(0, 3);
+       const distractorTexts = distractors.map(i => i[answerField]);
+       
+       options = [answerText, ...distractorTexts].sort(() => Math.random() - 0.5);
+       
+       let audioMap = {};
+       if (mode === 'han_pinyin') {
+           audioMap[answerText] = charObj['Link Âm Thanh Pinyin (Cloudinary MP3)'];
+           distractors.forEach(i => {
+               audioMap[i[answerField]] = i['Link Âm Thanh Pinyin (Cloudinary MP3)'];
+           });
+       }
+       return { questionText, options, correctAnswer: answerText, audioMap };
   };
 
   const loadNextCharacter = async (charObj) => {
@@ -629,7 +637,7 @@ export default function TracNghiemTab({ currentUser, userStats, setUserStats, sa
                             padding: '20px', fontSize: '1.2rem', borderRadius: '12px',
                             background: bgColor, color, border,
                             cursor: isRevealed ? 'default' : 'pointer',
-                            transition: 'all 0.2s'
+                            transition: 'all 0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px'
                           }}
                         >
                           <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}>
