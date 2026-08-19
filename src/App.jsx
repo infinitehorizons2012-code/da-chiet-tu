@@ -187,7 +187,22 @@ function LookupTab({ globalLookupTerm, setGlobalLookupTerm }) {
     }
   }, [globalLookupTerm]);
 
-  const handleSearch = async (e, termOverride = null) => {
+  
+    const audioInstanceRef = React.useRef(null);
+    const playAudio = (url) => {
+      if (!url) return;
+      if (audioInstanceRef.current) {
+        if (audioInstanceRef.current.src === url && !audioInstanceRef.current.paused) {
+          audioInstanceRef.current.pause();
+          audioInstanceRef.current.currentTime = 0;
+          return;
+        }
+        audioInstanceRef.current.pause();
+      }
+      audioInstanceRef.current = new Audio(url);
+      audioInstanceRef.current.play().catch(e => console.error("Audio play failed:", e));
+    };
+    const handleSearch = async (e, termOverride = null) => {
     if (e) e.preventDefault()
     const char = (termOverride !== null ? termOverride : searchTerm).trim()
     if (!char) return
@@ -346,7 +361,12 @@ function LookupTab({ globalLookupTerm, setGlobalLookupTerm }) {
 
           {/* Khu vực 3: Pinyin + Nghĩa + Hán Việt (bottom-left) */}
           <div className="info-block">
-            <div className="info-pinyin">{result.pinyin}</div>
+            <div className="info-pinyin" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                {result.pinyin}
+                {result.audioUrl && (
+                    <span onClick={() => playAudio(result.audioUrl)} style={{ fontSize: '1.2rem', cursor: 'pointer', pointerEvents: 'auto' }}>🔊</span>
+                )}
+              </div>
             <div className="info-hanviet">{result.hanviet}</div>
             <div className="info-meaning">{result.meaning}</div>
           </div>
@@ -376,7 +396,22 @@ function ResearchTab({ globalLookupTerm, setGlobalLookupTerm }) {
     setSaveStatus('');
   }, [selectedChar]);
 
-  const handleSave = async () => {
+  
+    const audioInstanceRef = React.useRef(null);
+    const playAudio = (url) => {
+      if (!url) return;
+      if (audioInstanceRef.current) {
+        if (audioInstanceRef.current.src === url && !audioInstanceRef.current.paused) {
+          audioInstanceRef.current.pause();
+          audioInstanceRef.current.currentTime = 0;
+          return;
+        }
+        audioInstanceRef.current.pause();
+      }
+      audioInstanceRef.current = new Audio(url);
+      audioInstanceRef.current.play().catch(e => console.error("Audio play failed:", e));
+    };
+    const handleSave = async () => {
     setIsSaving(true);
     setSaveStatus('Đang lưu...');
     try {
@@ -569,7 +604,13 @@ function ResearchTab({ globalLookupTerm, setGlobalLookupTerm }) {
              </div>
              <div className="detail-header">
                 <div className="detail-header-char">{selectedChar['Chữ Trung Quốc']}</div>
-                <div className="detail-pinyin">{selectedChar['Pinyin_Master (Pinyin Chuẩn Tổng Hợp 100%)']} - {selectedChar['Âm Hán Việt (Master 100%)']}</div>
+                <div className="detail-pinyin" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                    {selectedChar['Pinyin_Master (Pinyin Chuẩn Tổng Hợp 100%)']}
+                    {selectedChar['Link Âm Thanh Pinyin (Cloudinary MP3)'] && (
+                        <span onClick={() => playAudio(selectedChar['Link Âm Thanh Pinyin (Cloudinary MP3)'])} style={{ fontSize: '1.2rem', cursor: 'pointer', pointerEvents: 'auto' }}>🔊</span>
+                    )}
+                    - {selectedChar['Âm Hán Việt (Master 100%)']}
+                  </div>
                 <div className="detail-meaning">{selectedChar['Nghĩa Tiếng Việt (Master 100%)']}</div>
              </div>
 
