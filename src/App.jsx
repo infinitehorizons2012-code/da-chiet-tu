@@ -647,7 +647,7 @@ function LoginScreen({ onLogin }) {
          setError(data.error);
       }
     } catch (err) {
-      setError('Lỗi kết nối');
+      setError('Lỗi kết nối: ' + err.message);
     }
   };
 
@@ -668,7 +668,7 @@ function LoginScreen({ onLogin }) {
          setError(data.error);
       }
     } catch (err) {
-      setError('Lỗi kết nối');
+      setError('Lỗi kết nối: ' + err.message);
     }
   };
 
