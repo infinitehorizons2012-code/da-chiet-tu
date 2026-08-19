@@ -376,6 +376,7 @@ export default function TracNghiemTab({ currentUser, userStats, setUserStats, sa
      if (isRevealed) return;
      setSelectedOption(option);
      setIsRevealed(true);
+       if (session.mode === 'han_pinyin') { playAudio(currentChar['Link Âm Thanh Pinyin (Cloudinary MP3)']); }
      if (option === mcq.correctAnswer) {
         setFeedback({ type: 'success', message: 'Chính xác!' });
         setTimeout(() => handleNextQuestion(true), 1500);
