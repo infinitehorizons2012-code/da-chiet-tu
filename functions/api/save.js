@@ -16,8 +16,12 @@ export async function onRequestPost(context) {
     const { srs, ...otherComps } = comps;
 
     // Lưu SRS vào user_progress
-    if (srs) {
-       await db.prepare('INSERT INTO user_progress (username, char, srs_data, updated_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP) ON CONFLICT(username, char) DO UPDATE SET srs_data = excluded.srs_data, updated_at = CURRENT_TIMESTAMP').bind(username, char, JSON.stringify(srs)).run();
+        if (srs !== undefined) {
+       if (srs === null) {
+          await db.prepare('DELETE FROM user_progress WHERE username = ? AND char = ?').bind(username, char).run();
+       } else {
+          await db.prepare('INSERT INTO user_progress (username, char, srs_data, updated_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP) ON CONFLICT(username, char) DO UPDATE SET srs_data = excluded.srs_data, updated_at = CURRENT_TIMESTAMP').bind(username, char, JSON.stringify(srs)).run();
+       }
     }
 
     // Nếu là admin và có sửa các trường khác (như quiz_mapping)

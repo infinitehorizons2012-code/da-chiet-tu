@@ -1336,6 +1336,14 @@ function LuyenTapTab({ setPrimaryTab, setActiveTab, setGlobalLookupTerm, current
         }
       };
 
+      const handleRemoveFromPractice = async (charObj) => {
+        if (!window.confirm(`Bạn có chắc muốn hủy chọn chữ "${charObj['Chữ Trung Quốc']}" (xóa khỏi danh sách Luyện tập)?`)) return;
+        const originalSrs = charObj.srs;
+        charObj.srs = null;
+        setRenderTrigger(v => v + 1);
+        await saveSrs(charObj, originalSrs, null);
+      };
+
       const handleRevertToBatDau = async (charObj) => {
         if (!window.confirm(`Bạn có chắc muốn đưa chữ "${charObj['Chữ Trung Quốc']}" về trạng thái Bắt đầu? Toàn bộ tiến độ trắc nghiệm của chữ này sẽ bị xóa bỏ!`)) return;
         const originalSrs = { ...charObj.srs };
@@ -1442,6 +1450,9 @@ function LuyenTapTab({ setPrimaryTab, setActiveTab, setGlobalLookupTerm, current
                         )}
                         {SKILLS.some(skill => ['hat_mam', 'cay', 'hoa'].includes(getSrsStatus(item, skill.id))) && (
                           <button onClick={() => handleRevertToSanSangThi(item)} style={{background: '#f59e0b', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '500'}}>🔙 Sẵn sàng thi</button>
+                        )}
+                        {activeTab === 'bat_dau' && (
+                          <button onClick={() => handleRemoveFromPractice(item)} style={{background: '#94a3b8', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '6px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: '500'}}>✖ Hủy chọn</button>
                         )}
                      </div>
                </div>
