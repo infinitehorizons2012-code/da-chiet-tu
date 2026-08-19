@@ -188,7 +188,7 @@ function LookupTab({ globalLookupTerm, setGlobalLookupTerm }) {
   }, [globalLookupTerm]);
 
   
-    const audioInstanceRef = React.useRef(null);
+    const audioInstanceRef = useRef(null);
     const playAudio = (url) => {
       if (!url) return;
       if (audioInstanceRef.current) {
@@ -397,7 +397,7 @@ function ResearchTab({ globalLookupTerm, setGlobalLookupTerm }) {
   }, [selectedChar]);
 
   
-    const audioInstanceRef = React.useRef(null);
+    const audioInstanceRef = useRef(null);
     const playAudio = (url) => {
       if (!url) return;
       if (audioInstanceRef.current) {
