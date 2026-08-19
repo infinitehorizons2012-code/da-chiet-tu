@@ -31,10 +31,10 @@ const getSrsStatus = (item, skill) => {
 const getSrsLevel = (item, skill) => {
   if (!item.srs) return 0;
   if (item.srs.status && typeof item.srs.status === 'string') {
-     if (skill === 'chiettu') return item.srs.level || 0;
+     if (skill === 'chiettu') return item.srs.level || item.srs.streak || 0;
      return 0;
   }
-  if (item.srs[skill]) return item.srs[skill].level || 0;
+  if (item.srs[skill]) return item.srs[skill].level || item.srs[skill].streak || 0;
   return 0;
 };
 
@@ -1279,7 +1279,11 @@ function LuyenTapTab({ setPrimaryTab, setActiveTab, setGlobalLookupTerm, current
       
       let newSrs = { ...charObj.srs };
       SKILLS.forEach(skill => {
-         newSrs = buildNewSrs({srs: newSrs}, skill.id, 'san_sang_thi', 0);
+         // Ch? ??y nh?ng k? n?ng ?ang ? m?c bat_dau l?n san_sang_thi. Kh?ng reset c?c k? n?ng ?? c? ti?n ??.
+         const currentStatus = getSrsStatus(charObj, skill.id);
+         if (currentStatus === 'bat_dau' || !currentStatus) {
+            newSrs = buildNewSrs({srs: newSrs}, skill.id, 'san_sang_thi', 0);
+         }
       });
       
       charObj.srs = newSrs;
@@ -1344,7 +1348,7 @@ function LuyenTapTab({ setPrimaryTab, setActiveTab, setGlobalLookupTerm, current
                    </div>
                    <div className="tonghop-actions">
                       <button className="study-btn" onClick={() => handleStudy(item['Chữ Trung Quốc'])}>Học</button>
-                      {activeTab === 'bat_dau' && (
+                      {SKILLS.some(skill => getSrsStatus(item, skill.id) === 'bat_dau') && (
                         <button className="ready-btn" onClick={() => handleMoveAllToReady(item)}>Sẵn sàng thi</button>
                       )}
                    </div>
