@@ -1105,6 +1105,10 @@ function TongHopTab({ currentUser }) {
   const [targetCharToScroll, setTargetCharToScroll] = useState('');
   const [renderTrigger, setRenderTrigger] = useState(0);
   const [showHskMenu, setShowHskMenu] = useState(false);
+  const [hskHoverLevel, setHskHoverLevel] = useState(null);
+  const hskVocab = useMemo(() => ({
+      'HSK1 - Lesson 1': ['你', '您', '们', '老', '师', '王', '学', '生', '同', '大', '家', '好', '谢', '不', '客', '气', '再', '见']
+  }), []);
     const [showNhoMenu, setShowNhoMenu] = useState(false);    
     // Generate Nho groups: Nhom 1 (1-5), Nhom 2 (6-10), ..., up to ~1200
     const nhoGroups = ['Tổng'];
@@ -1125,6 +1129,28 @@ function TongHopTab({ currentUser }) {
     }
 
       
+    if (activeTab.startsWith('HSK')) {
+        if (activeTab.includes(' - Lesson ')) {
+            const vocabList = hskVocab[activeTab] || [];
+            if (vocabList.length === 0) return [];
+            const result = researchDataObj.filter(item => vocabList.includes(item['Chữ Trung Quốc']));
+            result.sort((a, b) => vocabList.indexOf(a['Chữ Trung Quốc']) - vocabList.indexOf(b['Chữ Trung Quốc']));
+            return result;
+        }
+        
+        const level = activeTab.split(' - ')[0]; // e.g. "HSK1"
+        const col = colMap[level];
+        if (!col) return [];
+        return researchDataObj.filter(item => {
+            const val = item[col];
+            return val !== undefined && val !== '' && val !== 'nan' && val !== null;
+        }).sort((a, b) => {
+            const vA = parseFloat(a[col]);
+            const vB = parseFloat(b[col]);
+            return (isNaN(vA) ? 0 : vA) - (isNaN(vB) ? 0 : vB);
+        });
+    }
+
       let baseTab = activeTab;
       if (activeTab.startsWith('Chữ Nho')) {
           baseTab = 'Chữ Nho';
@@ -1230,13 +1256,25 @@ function TongHopTab({ currentUser }) {
          
          <div className="tab-dropdown" onMouseEnter={() => setShowHskMenu(true)} onMouseLeave={() => setShowHskMenu(false)} style={{position: 'relative'}}>
            <button className={`tab-btn ${activeTab.startsWith('HSK') ? 'active' : ''}`}>
-             {activeTab.startsWith('HSK') ? activeTab : 'HSK'} ▾
+             {activeTab.startsWith('HSK') ? (activeTab.includes(' - ') ? activeTab.split(' - ')[0] : activeTab) : 'HSK'} ▼
            </button>
            {showHskMenu && (
-             <div className="dropdown-menu" style={{position: 'absolute', top: '100%', left: 0, backgroundColor: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', zIndex: 100, minWidth: '100px', padding: '5px 0'}}>
+             <div className="dropdown-menu" style={{position: 'absolute', top: '100%', left: 0, backgroundColor: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', zIndex: 100, minWidth: '120px', padding: '5px 0'}}>
                {hskTabs.map(hsk => (
-                 <div key={hsk} className="dropdown-item" onClick={() => { setActiveTab(hsk); setShowHskMenu(false); }} style={{padding: '10px 20px', cursor: 'pointer', color: '#334155'}}>
-                   {hsk}
+                 <div key={hsk} className="dropdown-item" onMouseEnter={() => setHskHoverLevel(hsk)} onMouseLeave={() => setHskHoverLevel(null)} style={{padding: '10px 20px', cursor: 'pointer', color: '#334155', position: 'relative'}}>
+                   {hsk} ►
+                   {hskHoverLevel === hsk && (
+                     <div className="dropdown-menu" style={{position: 'absolute', top: 0, left: '100%', backgroundColor: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', zIndex: 101, minWidth: '120px', padding: '5px 0', maxHeight: '300px', overflowY: 'auto'}}>
+                       <div className="dropdown-item" onClick={() => { setActiveTab(`${hsk} - Tổng`); setShowHskMenu(false); }} style={{padding: '10px 20px', cursor: 'pointer', color: '#334155'}}>
+                         Tổng
+                       </div>
+                       {Array.from({length: 15}, (_, i) => i + 1).map(lesson => (
+                         <div key={lesson} className="dropdown-item" onClick={() => { setActiveTab(`${hsk} - Lesson ${lesson}`); setShowHskMenu(false); }} style={{padding: '10px 20px', cursor: 'pointer', color: '#334155'}}>
+                           Lesson {lesson}
+                         </div>
+                       ))}
+                     </div>
+                   )}
                  </div>
                ))}
              </div>
