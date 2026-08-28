@@ -1110,7 +1110,7 @@ function TongHopTab({ currentUser }) {
     const [hskV3HoverLevel, setHskV3HoverLevel] = useState(null);
     const hskV3Levels = ['HSK1', 'HSK2', 'HSK3', 'HSK4', 'HSK5', 'HSK6', 'HSK7', 'HSK8', 'HSK9'];
     const hsk3Vocab = {
-        'HSK1 - Lesson 1': ['你', '您', '你们', '老师', '王老师', '学生', '同学', '大家', '好', '谢谢', '不客气', '再见']
+        'HSK1 - Lesson 1': ['你', '您', '们', '老', '师', '王', '学', '生', '同', '大', '家', '好', '谢', '不', '客', '气', '再', '见']
     };
     
     // Generate Nho groups: Nhom 1 (1-5), Nhom 2 (6-10), ..., up to ~1200
@@ -1132,11 +1132,24 @@ function TongHopTab({ currentUser }) {
     }
     if (activeTab.startsWith('HSK v3')) {
             const key = activeTab.replace('HSK v3 - ', '');
-            const vocabList = hsk3Vocab[key] || [];
-            if (vocabList.length === 0) return [];
-            const result = researchDataObj.filter(item => vocabList.includes(item['Chữ Trung Quốc']));
-            result.sort((a, b) => vocabList.indexOf(a['Chữ Trung Quốc']) - vocabList.indexOf(b['Chữ Trung Quốc']));
-            return result;
+            if (key.endsWith(' - Tổng')) {
+                const level = key.split(' - ')[0]; // e.g. "HSK1"
+                const col = colMap[level];
+                return researchDataObj.filter(item => {
+                    const val = item[col];
+                    return val !== undefined && val !== '' && val !== 'nan' && val !== null;
+                }).sort((a, b) => {
+                    const vA = parseFloat(a[col]);
+                    const vB = parseFloat(b[col]);
+                    return (isNaN(vA) ? 0 : vA) - (isNaN(vB) ? 0 : vB);
+                });
+            } else {
+                const vocabList = hsk3Vocab[key] || [];
+                if (vocabList.length === 0) return [];
+                const result = researchDataObj.filter(item => vocabList.includes(item['Chữ Trung Quốc']));
+                result.sort((a, b) => vocabList.indexOf(a['Chữ Trung Quốc']) - vocabList.indexOf(b['Chữ Trung Quốc']));
+                return result;
+            }
         }
       
       let baseTab = activeTab;
@@ -1268,7 +1281,10 @@ function TongHopTab({ currentUser }) {
                      {level} ►
                      {hskV3HoverLevel === level && (
                        <div className="dropdown-menu" style={{position: 'absolute', top: 0, left: '100%', backgroundColor: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', zIndex: 101, minWidth: '120px', padding: '5px 0', maxHeight: '300px', overflowY: 'auto'}}>
-                         {Array.from({length: 15}, (_, i) => i + 1).map(lesson => (
+                         <div className="dropdown-item" onClick={() => { setActiveTab(`HSK v3 - ${level} - Tổng`); setShowHskV3Menu(false); }} style={{padding: '10px 20px', cursor: 'pointer', color: '#334155'}}>
+                               Tổng
+                             </div>
+                             {Array.from({length: 15}, (_, i) => i + 1).map(lesson => (
                            <div key={lesson} className="dropdown-item" onClick={() => { setActiveTab(`HSK v3 - ${level} - Lesson ${lesson}`); setShowHskV3Menu(false); }} style={{padding: '10px 20px', cursor: 'pointer', color: '#334155'}}>
                              Lesson {lesson}
                            </div>
