@@ -1105,14 +1105,7 @@ function TongHopTab({ currentUser }) {
   const [targetCharToScroll, setTargetCharToScroll] = useState('');
   const [renderTrigger, setRenderTrigger] = useState(0);
   const [showHskMenu, setShowHskMenu] = useState(false);
-    const [showNhoMenu, setShowNhoMenu] = useState(false);
-    const [showHskV3Menu, setShowHskV3Menu] = useState(false);
-    const [hskV3HoverLevel, setHskV3HoverLevel] = useState(null);
-    const hskV3Levels = ['HSK1', 'HSK2', 'HSK3', 'HSK4', 'HSK5', 'HSK6', 'HSK7', 'HSK8', 'HSK9'];
-    const hsk3Vocab = {
-        'HSK1 - Lesson 1': ['你', '您', '们', '老', '师', '王', '学', '生', '同', '大', '家', '好', '谢', '不', '客', '气', '再', '见']
-    };
-    
+    const [showNhoMenu, setShowNhoMenu] = useState(false);    
     // Generate Nho groups: Nhom 1 (1-5), Nhom 2 (6-10), ..., up to ~1200
     const nhoGroups = ['Tổng'];
     for(let i = 1; i <= 240; i++) {
