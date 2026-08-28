@@ -1131,10 +1131,13 @@ function TongHopTab({ currentUser }) {
         }).slice(0, 100);
     }
     if (activeTab.startsWith('HSK v3')) {
-          const key = activeTab.replace('HSK v3 - ', '');
-          const vocabList = hsk3Vocab[key] || [];
-          return researchDataObj.filter(item => vocabList.includes(item['Chữ Trung Quốc']));
-      }
+            const key = activeTab.replace('HSK v3 - ', '');
+            const vocabList = hsk3Vocab[key] || [];
+            if (vocabList.length === 0) return [];
+            const result = researchDataObj.filter(item => vocabList.includes(item['Chữ Trung Quốc']));
+            result.sort((a, b) => vocabList.indexOf(a['Chữ Trung Quốc']) - vocabList.indexOf(b['Chữ Trung Quốc']));
+            return result;
+        }
       
       let baseTab = activeTab;
       if (activeTab.startsWith('Chữ Nho')) {
