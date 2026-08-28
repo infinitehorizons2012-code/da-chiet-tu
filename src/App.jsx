@@ -1106,6 +1106,12 @@ function TongHopTab({ currentUser }) {
   const [renderTrigger, setRenderTrigger] = useState(0);
   const [showHskMenu, setShowHskMenu] = useState(false);
     const [showNhoMenu, setShowNhoMenu] = useState(false);
+    const [showHskV3Menu, setShowHskV3Menu] = useState(false);
+    const [hskV3HoverLevel, setHskV3HoverLevel] = useState(null);
+    const hskV3Levels = ['HSK1', 'HSK2', 'HSK3', 'HSK4', 'HSK5', 'HSK6', 'HSK7', 'HSK8', 'HSK9'];
+    const hsk3Vocab = {
+        'HSK1 - Lesson 1': ['你', '您', '你们', '老师', '王老师', '学生', '同学', '大家', '好', '谢谢', '不客气', '再见']
+    };
     
     // Generate Nho groups: Nhom 1 (1-5), Nhom 2 (6-10), ..., up to ~1200
     const nhoGroups = ['Tổng'];
@@ -1124,7 +1130,13 @@ function TongHopTab({ currentUser }) {
                   (item['Nghĩa Tiếng Việt (Master 100%)'] && item['Nghĩa Tiếng Việt (Master 100%)'].toLowerCase().includes(term));
         }).slice(0, 100);
     }
-    let baseTab = activeTab;
+    if (activeTab.startsWith('HSK v3')) {
+          const key = activeTab.replace('HSK v3 - ', '');
+          const vocabList = hsk3Vocab[key] || [];
+          return researchDataObj.filter(item => vocabList.includes(item['Chữ Trung Quốc']));
+      }
+      
+      let baseTab = activeTab;
       if (activeTab.startsWith('Chữ Nho')) {
           baseTab = 'Chữ Nho';
       }
@@ -1242,7 +1254,30 @@ function TongHopTab({ currentUser }) {
            )}
          </div>
 
-         <div className="tab-dropdown" onMouseEnter={() => setShowNhoMenu(true)} onMouseLeave={() => setShowNhoMenu(false)} style={{position: 'relative'}}>
+           <div className="tab-dropdown" onMouseEnter={() => setShowHskV3Menu(true)} onMouseLeave={() => setShowHskV3Menu(false)} style={{position: 'relative'}}>
+             <button className={`tab-btn ${activeTab.startsWith('HSK v3') ? 'active' : ''}`}>
+               {activeTab.startsWith('HSK v3') ? (activeTab === 'HSK v3' ? 'HSK v3' : activeTab.replace('HSK v3 - ', '')) : 'HSK v3'} ▼
+             </button>
+             {showHskV3Menu && (
+               <div className="dropdown-menu" style={{position: 'absolute', top: '100%', left: 0, backgroundColor: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', zIndex: 100, minWidth: '120px', padding: '5px 0'}}>
+                 {hskV3Levels.map(level => (
+                   <div key={level} className="dropdown-item" onMouseEnter={() => setHskV3HoverLevel(level)} onMouseLeave={() => setHskV3HoverLevel(null)} style={{padding: '10px 20px', cursor: 'pointer', color: '#334155', position: 'relative'}}>
+                     {level} ►
+                     {hskV3HoverLevel === level && (
+                       <div className="dropdown-menu" style={{position: 'absolute', top: 0, left: '100%', backgroundColor: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', zIndex: 101, minWidth: '120px', padding: '5px 0', maxHeight: '300px', overflowY: 'auto'}}>
+                         {Array.from({length: 15}, (_, i) => i + 1).map(lesson => (
+                           <div key={lesson} className="dropdown-item" onClick={() => { setActiveTab(`HSK v3 - ${level} - Lesson ${lesson}`); setShowHskV3Menu(false); }} style={{padding: '10px 20px', cursor: 'pointer', color: '#334155'}}>
+                             Lesson {lesson}
+                           </div>
+                         ))}
+                       </div>
+                     )}
+                   </div>
+                 ))}
+               </div>
+             )}
+           </div>
+           <div className="tab-dropdown" onMouseEnter={() => setShowNhoMenu(true)} onMouseLeave={() => setShowNhoMenu(false)} style={{position: 'relative'}}>
              <button className={`tab-btn ${activeTab.startsWith('Chữ Nho') ? 'active' : ''}`} onClick={() => setActiveTab('Chữ Nho - Tổng')}>
                {activeTab.startsWith('Chữ Nho') ? (activeTab === 'Chữ Nho - Tổng' ? 'Chữ Nho' : activeTab.replace('Chữ Nho - ', '')) : 'Chữ Nho'} ▼
              </button>
