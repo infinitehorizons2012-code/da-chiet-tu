@@ -1123,27 +1123,7 @@ function TongHopTab({ currentUser }) {
                   (item['Nghĩa Tiếng Việt (Master 100%)'] && item['Nghĩa Tiếng Việt (Master 100%)'].toLowerCase().includes(term));
         }).slice(0, 100);
     }
-    if (activeTab.startsWith('HSK v3')) {
-            const key = activeTab.replace('HSK v3 - ', '');
-            if (key.endsWith(' - Tổng')) {
-                const level = key.split(' - ')[0]; // e.g. "HSK1"
-                const col = colMap[level];
-                return researchDataObj.filter(item => {
-                    const val = item[col];
-                    return val !== undefined && val !== '' && val !== 'nan' && val !== null;
-                }).sort((a, b) => {
-                    const vA = parseFloat(a[col]);
-                    const vB = parseFloat(b[col]);
-                    return (isNaN(vA) ? 0 : vA) - (isNaN(vB) ? 0 : vB);
-                });
-            } else {
-                const vocabList = hsk3Vocab[key] || [];
-                if (vocabList.length === 0) return [];
-                const result = researchDataObj.filter(item => vocabList.includes(item['Chữ Trung Quốc']));
-                result.sort((a, b) => vocabList.indexOf(a['Chữ Trung Quốc']) - vocabList.indexOf(b['Chữ Trung Quốc']));
-                return result;
-            }
-        }
+
       
       let baseTab = activeTab;
       if (activeTab.startsWith('Chữ Nho')) {
@@ -1263,32 +1243,7 @@ function TongHopTab({ currentUser }) {
            )}
          </div>
 
-           <div className="tab-dropdown" onMouseEnter={() => setShowHskV3Menu(true)} onMouseLeave={() => setShowHskV3Menu(false)} style={{position: 'relative'}}>
-             <button className={`tab-btn ${activeTab.startsWith('HSK v3') ? 'active' : ''}`}>
-               {activeTab.startsWith('HSK v3') ? (activeTab === 'HSK v3' ? 'HSK v3' : activeTab.replace('HSK v3 - ', '')) : 'HSK v3'} ▼
-             </button>
-             {showHskV3Menu && (
-               <div className="dropdown-menu" style={{position: 'absolute', top: '100%', left: 0, backgroundColor: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', zIndex: 100, minWidth: '120px', padding: '5px 0'}}>
-                 {hskV3Levels.map(level => (
-                   <div key={level} className="dropdown-item" onMouseEnter={() => setHskV3HoverLevel(level)} onMouseLeave={() => setHskV3HoverLevel(null)} style={{padding: '10px 20px', cursor: 'pointer', color: '#334155', position: 'relative'}}>
-                     {level} ►
-                     {hskV3HoverLevel === level && (
-                       <div className="dropdown-menu" style={{position: 'absolute', top: 0, left: '100%', backgroundColor: 'white', border: '1px solid #e2e8f0', borderRadius: '8px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)', zIndex: 101, minWidth: '120px', padding: '5px 0', maxHeight: '300px', overflowY: 'auto'}}>
-                         <div className="dropdown-item" onClick={() => { setActiveTab(`HSK v3 - ${level} - Tổng`); setShowHskV3Menu(false); }} style={{padding: '10px 20px', cursor: 'pointer', color: '#334155'}}>
-                               Tổng
-                             </div>
-                             {Array.from({length: 15}, (_, i) => i + 1).map(lesson => (
-                           <div key={lesson} className="dropdown-item" onClick={() => { setActiveTab(`HSK v3 - ${level} - Lesson ${lesson}`); setShowHskV3Menu(false); }} style={{padding: '10px 20px', cursor: 'pointer', color: '#334155'}}>
-                             Lesson {lesson}
-                           </div>
-                         ))}
-                       </div>
-                     )}
-                   </div>
-                 ))}
-               </div>
-             )}
-           </div>
+
            <div className="tab-dropdown" onMouseEnter={() => setShowNhoMenu(true)} onMouseLeave={() => setShowNhoMenu(false)} style={{position: 'relative'}}>
              <button className={`tab-btn ${activeTab.startsWith('Chữ Nho') ? 'active' : ''}`} onClick={() => setActiveTab('Chữ Nho - Tổng')}>
                {activeTab.startsWith('Chữ Nho') ? (activeTab === 'Chữ Nho - Tổng' ? 'Chữ Nho' : activeTab.replace('Chữ Nho - ', '')) : 'Chữ Nho'} ▼
