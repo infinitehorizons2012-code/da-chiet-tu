@@ -1107,7 +1107,8 @@ function TongHopTab({ currentUser }) {
   const [showHskMenu, setShowHskMenu] = useState(false);
   const [hskHoverLevel, setHskHoverLevel] = useState(null);
   const hskVocab = {
-      'HSK1 - Lesson 1': ['你', '您', '们', '老', '师', '王', '学', '生', '同', '大', '家', '好', '谢', '不', '客', '气', '再', '见']
+      'HSK1 - Lesson 1': ['你', '您', '们', '老', '师', '王', '学', '生', '同', '大', '家', '好', '谢', '不', '客', '气', '再', '见'],
+      'HSK1 - Lesson 2': ['请', '问', '叫', '什', '么', '名', '字', '我', '是', '对', '起', '没', '关', '系', '事', '很', '高', '兴', '认', '识', '也', '李', '文']
   };
 
     const [showNhoMenu, setShowNhoMenu] = useState(false);    
